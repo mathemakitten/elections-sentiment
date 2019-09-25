@@ -1,4 +1,4 @@
-# elections-sentiment
+# 2019 Canadian Federal Elections Sentiment 
 analysis of sentiment on the 2019 Canadian election
 
 **Twitter queries**
@@ -14,10 +14,33 @@ GetOldTweets3 --querysearch "(#cdnpoli, OR #elxn43, OR #polcan, OR #ItsOurVote, 
 one month leading up to the election 
 * Tweets must contain one of the official elections hashtags `#cdnpoli, OR #elxn43, OR #polcan, OR #ItsOurVote, OR #CestNotreVote`
 * No other constraints (i.e. min_faves, retweets, geo, etc.)
+* Tweets can be in English or French (or any other language)
 * Twitter has stated that [there has not been any wide-scale disinformation](https://globalnews.ca/news/5943227/canada-election-twitter-manipulation/) 
 campaigns on the election as of September 24 2019
-* It takes ~3.5 minutes to scrape a day's worth of tweets (25k tweets)
+* It takes ~7 minutes to scrape a day's worth of tweets (25k tweets),
+7 * 180 minutes = 21 hours (+30 seconds for sleep, lol)
 
 ## Questions 
 * Do we need to clean the tweets data, or should we leave it as-is for encoding? 
 (i.e. clean links, hashtags, @replies)
+* How many clusters should we have? Does this number change over time?  
+* Do we need to split out the analysis week-by-week? 
+(i.e. here's what's trending in Canadian politics this week)
+-- might depend on how different is 
+
+## TODO 
+* [ ] Scrape 180 days of Canadian political Twitter data
+* [ ] Build some graphs
+    * [ ] Count of tweets over time (hypothesis: more people start tweeting closer to the election)
+    * [ ] Map out most popular hashtags over time 
+    * [ ] Map out most popular words over time
+* [ ] Encode all tweets with Universal Sentence Encoder
+* [ ] Run unsupervised methods on it 
+* [ ] Try the Tensorflow [Multilingual Universal Sentence Encoder for Semantic Retrieval](https://tfhub.dev/s?q=universal-sentence-encoder-multilingual) 
+to identify tweets which are semantically similar
+    * Can we use this to identify disinformation?
+    
+## Data notes to look into 
+* Sept 22nd dataset seems to only have 3740 tweets and the min_date is `'2019-09-22 18:00:43+00:00'`
+-- why is this? 
+* Sept 21 and 23 seem to be OK though
