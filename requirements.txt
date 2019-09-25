@@ -1,0 +1,15 @@
+GetOldTweets3
+gensim
+lightgbm
+matplotlib
+nltk
+numpy
+opencv-python
+pandas
+regex
+scikit-learn
+seaborn
+tensorflow
+tensorflow-hub
+tweet-preprocessor
+wordcloud
