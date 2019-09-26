@@ -50,4 +50,4 @@ to identify tweets which are semantically similar
 * Sept 21 and 23 seem to be OK though
 
 ## Data scraping progress 
-* Sept 19 - 25 done 
+* March 29 - September 25 completed 
