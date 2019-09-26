@@ -19,6 +19,9 @@ one month leading up to the election
 campaigns on the election as of September 24 2019
 * It takes ~7 minutes to scrape a day's worth of tweets (25k tweets),
 7 * 180 minutes = 21 hours (+30 seconds for sleep, lol)
+* 899,555 tweets with 15 columns: `'username', 'to', 'text', 'retweets', 'favorites', 'replies', 'id',
+       'permalink', 'author_id', 'date', 'formatted_date', 'mentions',
+       'hashtags', 'geo', 'urls'`
 
 ## Questions 
 * Do we need to clean the tweets data, or should we leave it as-is for encoding? 
@@ -29,13 +32,14 @@ campaigns on the election as of September 24 2019
 -- might depend on how different is 
 
 ## TODO 
-* [ ] Scrape 180 days of Canadian political Twitter data
+* [x] Scrape 180 days of Canadian political Twitter data
 * [ ] Build some graphs
-    * [ ] Count of tweets over time (hypothesis: more people start tweeting closer to the election)
+    * [x] Count of tweets over time (hypothesis: more people start tweeting closer to the election)
     * [ ] Map out most popular hashtags over time 
     * [ ] Map out most popular words over time
 * [ ] Encode all tweets with Universal Sentence Encoder
 * [ ] Run unsupervised methods on it 
+* [ ] Graph relative size of each cluster
 * [ ] Try the Tensorflow [Multilingual Universal Sentence Encoder for Semantic Retrieval](https://tfhub.dev/s?q=universal-sentence-encoder-multilingual) 
 to identify tweets which are semantically similar
     * Can we use this to identify disinformation?
@@ -44,3 +48,6 @@ to identify tweets which are semantically similar
 * Sept 22nd dataset seems to only have 3740 tweets and the min_date is `'2019-09-22 18:00:43+00:00'`
 -- why is this? 
 * Sept 21 and 23 seem to be OK though
+
+## Data scraping progress 
+* Sept 19 - 25 done 

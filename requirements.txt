@@ -1,15 +1,15 @@
 GetOldTweets3
 gensim
+jupyter
 lightgbm
 matplotlib
 nltk
+nb_conda
 numpy
-opencv-python
 pandas
 regex
 scikit-learn
 seaborn
 tensorflow
 tensorflow-hub
-tweet-preprocessor
 wordcloud

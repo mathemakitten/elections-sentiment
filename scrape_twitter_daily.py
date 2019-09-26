@@ -9,12 +9,14 @@ from utils import get_logger
 logger = get_logger('Scrape')
 #now = datetime.datetime.now()
 
-TODAY = datetime.datetime.today()
-NUM_DAYS = 180  # 6 months of data
-date_list = [TODAY - datetime.timedelta(days=x) for x in range(NUM_DAYS)]
+# TODAY = datetime.datetime.today() # USE THIS IF SCRAPING FROM TODAY OTHERWISE USE LINE BELOW
+TODAY = datetime.datetime.strptime('2019-04-10', '%Y-%m-%d')
+MIN_DATE = datetime.datetime.strptime('2019-03-29', '%Y-%m-%d')
+#date_list = [TODAY - datetime.timedelta(days=x) for x in range(NUM_DAYS)]
+date_list = [TODAY - datetime.timedelta(days=x) for x in range((TODAY-MIN_DATE).days + 1)]
 
 for date in date_list:
-    time.sleep(30)
+    time.sleep(15)
     NEXT_DAY = (date + datetime.timedelta(days=1)).strftime("%Y-%m-%d")
     DATE = date.strftime("%Y-%m-%d")
     logger.info("Scraping tweets for {}".format(date))
