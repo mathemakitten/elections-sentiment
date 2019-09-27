@@ -52,7 +52,7 @@ def get_paths(create_dir=True):
     from types import SimpleNamespace
 
     cwd = Path(os.getcwd())
-    print(f'Current working directory: {repr(cwd)}')
+    print('Current working directory: {}'.format(repr(cwd)))
     file_paths = ['cleaned_tweets', 'raw_tweets', 'pics', 'models']
     file_paths = {fp: cwd/fp for fp in file_paths}
 
@@ -123,14 +123,14 @@ def plot_confusion_matrix(y_true, y_pred, classes, title, save_path, normalize=F
                     ha="center", va="center",
                     color="white" if cm[i, j] > thresh else "black")
     fig.tight_layout()
-    plt.savefig(save_path / f'{title}.png')
+    plt.savefig(save_path / '{}.png'.format(title))
 
 
 def plot_class_counts_over_time(data, save_file_name):
     data['formatted_date'] = pd.to_datetime(data['formatted_date']).dt.date
     data.groupby(['formatted_date', 'label']).size().unstack().plot.area(rot=90, alpha=0.6)
     plt.tight_layout()
-    plt.savefig(f'{save_file_name}.png')
+    plt.savefig('{}.png'.format(save_file_name))
 
 
 class Timer(object):
@@ -142,7 +142,7 @@ class Timer(object):
 
     def __exit__(self, type, value, traceback):
         self.end = time()
-        print(f"{self.description}, time took: {(self.end - self.start)/60:.2f} mins")
+        print("{}, time took: {} mins".format(self.description, (self.end - self.start)/60))
 
 
 def check_gpu():
@@ -161,14 +161,14 @@ def set_gpu_environ():
 
 
 def save_model(model, model_name):
-    save_model_file_path = paths.models/f'{model_name}.pkl'
+    save_model_file_path = paths.models/'{}.pkl'.format(model_name)
 
     with open(save_model_file_path, 'wb') as fout:
         pickle.dump(model, fout)
 
 
 def load_model(model_name):
-    load_model_file_path = paths.models/f'{model_name}.pkl'
+    load_model_file_path = paths.models/'{}.pkl'.format(model_name)
 
     with open(load_model_file_path, 'rb') as fin:
         model = pickle.load(fin)
