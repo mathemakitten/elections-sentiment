@@ -50,6 +50,7 @@ module_url = 'https://tfhub.dev/google/universal-sentence-encoder/2'
 tf_hub_embedder = hub.Module(module_url)
 n_clusters = 5
 
+logger.info("Loading data")
 files = glob.glob('tweets/cdnpoli_*.csv')
 df = pd.read_csv(files[0])
 
@@ -60,10 +61,40 @@ for file in files[1:]:
 # Add a date column without timestamps
 df['day'] = pd.to_datetime(df['date']).dt.date
 
+logger.info("Data successfully loaded")
 df = df.head(100) # TODO REMOVE THIS!!!
+
+# Tokenize tweets with the Stanford PTB tokenizer
+'''
+from nltk.tag import StanfordPOSTagger
+from nltk import word_tokenize
+
+# Add the jar and model via their path (instead of setting environment variables):
+jar = 'your_path/stanford-postagger-full-2016-10-31/stanford-postagger.jar'
+model = 'your_path/stanford-postagger-full-2016-10-31/models/english-left3words-distsim.tagger'
+
+pos_tagger = StanfordPOSTagger(model, jar, encoding='utf8')
+
+text = pos_tagger.tag(word_tokenize("What's the airspeed of an unladen swallow ?"))
+print(text)
+'''
+from nltk.tag import StanfordPOSTagger
+from nltk import word_tokenize
+#
+# import os
+# os.environ['JAVAHOME'] = '/usr/bin/java'
+#
+# # Add the jar and model via their path (instead of setting environment variables):
+# jar = 'stanford-postagger-2018-10-16/stanford-postagger-3.9.2.jar'
+# model = 'stanford-postagger-2018-10-16/models/english-left3words-distsim.tagger'
+# pos_tagger = StanfordPOSTagger(model, jar, encoding='utf8')
+
+from nltk.parse.corenlp import CoreNLPParser
+st = CoreNLPParser()
 
 logger.info("Splitting sentences into batches")
 tweets_to_embed = list(df['text'])
+tweets_to_embed = [st.tokenize((tweet)) for tweet in tweets_to_embed]
 sentences_batched = list(split_sentences(tweets_to_embed, 200000))
 logger.info("Done batching tweets")
 

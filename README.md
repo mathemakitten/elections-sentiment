@@ -37,6 +37,9 @@ campaigns on the election as of September 24 2019
     * [x] Count of tweets over time (hypothesis: more people start tweeting closer to the election)
     * [ ] Map out most popular hashtags over time 
     * [ ] Map out most popular words over time
+* [ ] Tokenize tweets with Penn Treebank 3 encoder
+as in the Universal Sentence Encoder paper via `nltk.tokenize.stanford`
+* [ ] Truncate links to extract https://[DOMAIN]/[FIRST_SUBDOMAIN]
 * [ ] Encode all tweets with Universal Sentence Encoder
 * [ ] Run unsupervised methods on it 
 * [ ] Graph relative size of each cluster
