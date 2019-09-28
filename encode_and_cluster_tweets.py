@@ -10,6 +10,10 @@ from sklearn.cluster import KMeans
 
 import tensorflow_hub as hub
 import tensorflow as tf
+import random
+
+import pickle
+import os
 
 logger = get_logger("LOGGER")
 
@@ -62,7 +66,7 @@ for file in files[1:]:
 df['day'] = pd.to_datetime(df['date']).dt.date
 
 logger.info("Data successfully loaded")
-df = df.head(100) # TODO REMOVE THIS!!!
+#df = df.head(100) # TODO REMOVE THIS!!!
 
 # Tokenize tweets with the Stanford PTB tokenizer
 '''
@@ -89,26 +93,40 @@ from nltk import word_tokenize
 # model = 'stanford-postagger-2018-10-16/models/english-left3words-distsim.tagger'
 # pos_tagger = StanfordPOSTagger(model, jar, encoding='utf8')
 
-from nltk.parse.corenlp import CoreNLPParser
-st = CoreNLPParser()
 
-logger.info("Splitting sentences into batches")
-tweets_to_embed = list(df['text'])
-tweets_to_embed = [st.tokenize((tweet)) for tweet in tweets_to_embed]
-sentences_batched = list(split_sentences(tweets_to_embed, 200000))
-logger.info("Done batching tweets")
+if not os.path.isfile('cache/all_tweets_embedded.pkl'):
+    logger.info("Running sentence embedding")
+    from nltk.parse.corenlp import CoreNLPParser
+    st = CoreNLPParser()
+    # TODO finish correct tokenization
 
-all_tweets_embedded = []
+    logger.info("Splitting sentences into batches")
+    tweets_to_embed = list(df['text'])
+    tweets_to_embed = [st.tokenize((tweet)) for tweet in tweets_to_embed]
+    sentences_batched = list(split_sentences(tweets_to_embed, 200000))
+    logger.info("Done batching tweets")
 
-logger.info("Embedding tweets")
-for i, tweet_batch in enumerate(sentences_batched):
-    logger.info("Batch {} of {}".format(i, len(sentences_batched)))
-    tweets_embedding = embed_tweets([str(tweet) for tweet in tweet_batch])
-    all_tweets_embedded.extend(tweets_embedding)
+    all_tweets_embedded = []
+
+    logger.info("Embedding tweets")
+    for i, tweet_batch in enumerate(sentences_batched):
+        logger.info("Batch {} of {}".format(i, len(sentences_batched)))
+        tweets_embedding = embed_tweets([str(tweet) for tweet in tweet_batch])
+        all_tweets_embedded.extend(tweets_embedding)
+    pickle.dump(all_tweets_embedded, open('cache/all_tweets_embedded.pkl', 'wb'))
+else:
+    logger.info("Loaded embedded tweets from cache")
+    all_tweets_embedded = pickle.load(open('cache/all_tweets_embedded.pkl' 'rb'))
 
 kmeans = KMeans(n_clusters=n_clusters, random_state=0).fit(all_tweets_embedded)
+# TODO try UMAP
 predictions = kmeans.predict(all_tweets_embedded)
 df['cluster'] = predictions
 
+# Save dataframe for exploration in a notebook
+df.to_csv('tmp/clustering_attempt.csv')
+
+# Look at samples from the cluster
+# random.sample(list(df[df['cluster'] == 0]['text']), 10)
 logger.info("Done")
 
