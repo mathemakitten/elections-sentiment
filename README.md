@@ -41,7 +41,12 @@ campaigns on the election as of September 24 2019
 as in the Universal Sentence Encoder paper via `nltk.tokenize.stanford`
 * [ ] Truncate links to extract https://[DOMAIN]/[FIRST_SUBDOMAIN]
 * [ ] Encode all tweets with Universal Sentence Encoder
-* [ ] Run unsupervised methods on it 
+* [ ] Run unsupervised methods on it with 
+    * [ ] Try k-means (does not do super well with 5 clusters, try searching over k?)
+    * [ ] Try UMAP
+    * [ ] Try locally linear embeddings (LLE)
+    * [ ] Try Isomap
+    * [ ] If none of the above works, try other [scikit-learn manifold dimensionality reduction](https://scikit-learn.org/stable/auto_examples/manifold/plot_compare_methods.html#sphx-glr-auto-examples-manifold-plot-compare-methods-py)
 * [ ] Graph relative size of each cluster
 * [ ] Try the Tensorflow [Multilingual Universal Sentence Encoder for Semantic Retrieval](https://tfhub.dev/s?q=universal-sentence-encoder-multilingual) 
 to identify tweets which are semantically similar
