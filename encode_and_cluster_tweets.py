@@ -145,22 +145,3 @@ df.to_csv('tmp/clustering_attempt_{}_{}clusters.csv'.format(clustering_method, n
 logger.info("Done")
 
 
-# Top 50 hashtags
-import plotly.express as px
-from collections import Counter
-all_hashtags = df['hashtags'].str.cat(sep=' ').split(' ')
-hashtag_counts = pd.DataFrame(Counter(all_hashtags).most_common(50), columns=['hashtag', 'count'])
-top10_hashtags = html.Div(children=[
-    dcc.Graph(
-        id='top10_hashtags',
-        figure=go.Figure(data=go.Bar(y=hashtag_counts['count'],
-                                     x=hashtag_counts['hashtag']),
-                         layout=go.Layout(title='Top 10 Accounts by Favourites',
-                                                hovermode='closest',
-                                                xaxis={'title': 'times tweets favourited by others'},
-                                                yaxis={'autorange': 'reversed'},
-                                                font={'family': 'Arial', 'size': 14}
-                                          )),
-    ),
-    html.Span(children=[html.P('This graph aims to capture tweeters by tweet volume.')], style={'text-align': 'center'})
-], className="six columns")

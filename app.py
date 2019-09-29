@@ -6,6 +6,7 @@ import dash_table
 
 import plotly.graph_objects as go
 
+from collections import Counter
 import pandas as pd
 import datetime
 import glob
@@ -168,12 +169,31 @@ top10_tweets_by_favorites = html.Div([
              )],
     style={'padding-top': '10px', 'padding-right': '50px', 'padding-bottom': '50px', 'padding-left': '50px'})
 
+
+# Top 50 hashtags
+all_hashtags = df['hashtags'].str.cat(sep=' ').split(' ')
+hashtag_counts = pd.DataFrame(Counter(all_hashtags).most_common(50), columns=['hashtag', 'count'])
+
+top10_hashtags = html.Div(children=[
+    html.Span(html.H5(children='Top 50 Popular Hashtags'), style={'text-align': 'center'}),
+    dcc.Graph(
+        id='top10_hashtags',
+        figure=go.Figure(data=go.Bar(y=hashtag_counts['count'],
+                                     x=hashtag_counts['hashtag']),
+                         layout=go.Layout(hovermode='closest',
+                                          xaxis={'tickangle': -90}, yaxis={'title': 'number of times tweeted'},
+                                          font={'family': 'Arial'}, margin=dict(l=50, r=50, t=20, b=20)
+                                          )),
+    )], style={'padding-top': '10px', 'padding-right': '50px', 'padding-bottom': '50px', 'padding-left': '50px'})
+
+
 app.layout = html.Div([
     header,  # header
     html.Div(children=[volume_graph, overview_stats], className="row"),  # first row of grid
     html.Div(children=[top10_accounts_by_tweets, top10_accounts_by_faves], className="row"),  # second row of grid,
     top10_tweets_by_retweets,  # third row of grid
-    top10_tweets_by_favorites,  # fourth row of grid
+    top10_tweets_by_favorites,  # fourth row of grid,
+    top10_hashtags,  # fifth row of the grid
                        ])
 
 if __name__ == '__main__':
