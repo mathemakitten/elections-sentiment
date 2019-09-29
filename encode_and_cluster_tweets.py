@@ -52,7 +52,10 @@ check_gpu()
 
 module_url = 'https://tfhub.dev/google/universal-sentence-encoder/2'
 tf_hub_embedder = hub.Module(module_url)
-n_clusters = 5
+
+# Hyperparameter search for number of clusters for k-means
+n_clusters = [5, 10, 12, 14, 16]
+clustering_method = 'kmeans'
 
 logger.info("Loading data")
 files = glob.glob('tweets/cdnpoli_*.csv')
@@ -116,17 +119,48 @@ if not os.path.isfile('cache/all_tweets_embedded.pkl'):
     pickle.dump(all_tweets_embedded, open('cache/all_tweets_embedded.pkl', 'wb'))
 else:
     logger.info("Loaded embedded tweets from cache")
-    all_tweets_embedded = pickle.load(open('cache/all_tweets_embedded.pkl' 'rb'))
+    all_tweets_embedded = pickle.load(open('cache/all_tweets_embedded.pkl', 'rb'))
 
-kmeans = KMeans(n_clusters=n_clusters, random_state=0).fit(all_tweets_embedded)
-# TODO try UMAP
+# TODO try other clustering techniques
+# logger.info("Clustering method: {}".format(clustering_method))
+# for i, n in enumerate(n_clusters):
+#     logger.info("Clustering attempt {} of {}".format(i, len(n_clusters)))
+#     kmeans = KMeans(n_clusters=n, random_state=0).fit(all_tweets_embedded)
+#
+#     predictions = kmeans.predict(all_tweets_embedded)
+#     df['cluster'] = predictions
+#
+#     # Save dataframe for exploration in a notebook
+#     df.to_csv('tmp/clustering_attempt_{}_{}clusters.csv'.format(clustering_method, n))
+
+n=10
+kmeans = KMeans(n_clusters=n, random_state=0).fit(all_tweets_embedded)
 predictions = kmeans.predict(all_tweets_embedded)
 df['cluster'] = predictions
+df.to_csv('tmp/clustering_attempt_{}_{}clusters.csv'.format(clustering_method, n))
 
-# Save dataframe for exploration in a notebook
-df.to_csv('tmp/clustering_attempt.csv')
 
 # Look at samples from the cluster
 # random.sample(list(df[df['cluster'] == 0]['text']), 10)
 logger.info("Done")
 
+
+# Top 50 hashtags
+import plotly.express as px
+from collections import Counter
+all_hashtags = df['hashtags'].str.cat(sep=' ').split(' ')
+hashtag_counts = pd.DataFrame(Counter(all_hashtags).most_common(50), columns=['hashtag', 'count'])
+top10_hashtags = html.Div(children=[
+    dcc.Graph(
+        id='top10_hashtags',
+        figure=go.Figure(data=go.Bar(y=hashtag_counts['count'],
+                                     x=hashtag_counts['hashtag']),
+                         layout=go.Layout(title='Top 10 Accounts by Favourites',
+                                                hovermode='closest',
+                                                xaxis={'title': 'times tweets favourited by others'},
+                                                yaxis={'autorange': 'reversed'},
+                                                font={'family': 'Arial', 'size': 14}
+                                          )),
+    ),
+    html.Span(children=[html.P('This graph aims to capture tweeters by tweet volume.')], style={'text-align': 'center'})
+], className="six columns")
