@@ -1,4 +1,4 @@
-#GetOldTweets3
+GetOldTweets3
 gensim
 jupyter
 lightgbm
@@ -10,7 +10,7 @@ pandas
 regex
 scikit-learn
 seaborn
-tensorflow-gpu
+tensorflow-gpu==1.14.0
 tensorflow-hub
 wordcloud
 #nb_conda_kernels

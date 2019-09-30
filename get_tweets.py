@@ -39,7 +39,7 @@ def create_preprocessing_functions(pre_processing_options):
     import preprocessor
 
     pre_processing_options_str_formatted = pformat(pre_processing_options, indent=2)
-    print(f'Preprocessing tweet text with following choices:\n{pre_processing_options_str_formatted}\n')
+    #print('Preprocessing tweet text with following choices:\n{}\n'.format(pre_processing_options_str_formatted))
 
     # remove URL and emoji and simple smiley
     preprocessor.set_options(preprocessor.OPT.URL, preprocessor.OPT.EMOJI,
@@ -91,18 +91,18 @@ def get_cleaned_tweets(query_dict):
     """
 
     file_name = _convert_query_dict_to_str_as_filename(query_dict)
-    save_cleaned_file_name = paths.cleaned_tweets / f'cleaned_{file_name}.csv'
+    save_cleaned_file_name = paths.cleaned_tweets / 'cleaned_{}.csv'.format(file_name)
 
     if save_cleaned_file_name.is_file():
-        print(f'Cleaned file {repr(save_cleaned_file_name)} already exists, reload')
+        print('Cleaned file {} already exists, reload'.format(save_cleaned_file_name))
         tweet_df = load_csv(save_cleaned_file_name)
     else:
         tweet_df = get_raw_tweets(query_dict)
 
-        print(f'Cleaning tweets')
+        print('Cleaning tweets')
         cleaned_tweet_df = _clean_tweets_text(tweet_df)
 
-        print(f'Select only {USE_TWEETS_COLS} and save tweets to: {repr(save_cleaned_file_name)}')
+        #print('Select only {USE_TWEETS_COLS} and save tweets to: {repr(save_cleaned_file_name)}'.format())
         cleaned_tweet_df[USE_TWEETS_COLS].to_csv(save_cleaned_file_name, index=False)
 
     print('Done getting tweets.')
@@ -120,10 +120,10 @@ def get_raw_tweets(query_dict):
     :return: dataframe
     """
     file_name = _convert_query_dict_to_str_as_filename(query_dict)
-    save_raw_file_name = paths.raw_tweets / f'raw_{file_name}.csv'
+    save_raw_file_name = paths.raw_tweets / 'raw_{}.csv'.format(file_name)
 
     if save_raw_file_name.is_file():
-        print(f'Raw file {repr(save_raw_file_name)} already exists, reload')
+        print('Raw file {} already exists, reload'.format(repr(save_raw_file_name)))
         tweet_df = load_csv(save_raw_file_name)
     else:
         _validate_query(query_dict)

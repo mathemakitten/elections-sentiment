@@ -119,7 +119,7 @@ top10_mentions = html.Div(children=[
                                           font={'family': 'Arial', 'size': 14}
                                           )),
     ),
-    html.Span(children=[html.P('Who do people mention the most?')], style={'text-align': 'center'})
+    html.Span(children=[html.P('Who do people talk to/about the most?')], style={'text-align': 'center'})
 ], className="six columns")
 
 
@@ -135,7 +135,23 @@ top10_accounts_by_faves = html.Div(children=[
                                                 font={'family': 'Arial', 'size': 14}
                                           )),
     ),
-    html.Span(children=[html.P('This graph aims to capture tweeters who tweet content popular Canadian political content.')], style={'text-align': 'center'})
+    html.Span(children=[html.P('This graph aims to capture tweeters who tweet highly-faved Canadian political content.')], style={'text-align': 'center'})
+], className="six columns")
+
+
+top10_accounts_by_retweets = html.Div(children=[
+    dcc.Graph(id='top10_accounts_by_retweets',
+              figure=go.Figure(data=go.Bar(y=df.groupby(['username']).agg({'retweets':sum}).sort_values('retweets', ascending=False).head(10).index.tolist(),
+                                           x=df.groupby(['username']).agg({'retweets':sum}).sort_values('retweets', ascending=False).head(10)['retweets'],
+                                           orientation='h'),
+                               layout=go.Layout(title='Top 10 Accounts by Retweets',
+                                                hovermode='closest',
+                                                xaxis={'title': 'times tweets retweeted by others'},
+                                                yaxis={'autorange': 'reversed'},
+                                                font={'family': 'Arial', 'size': 14}
+                                          )),
+    ),
+    html.Span(children=[html.P('This graph captures people who tweet highly-retweeted Canadian political content.')], style={'text-align': 'center'})
 ], className="six columns")
 
 
@@ -159,7 +175,7 @@ top10_tweets_by_retweets = html.Div([
                                             )],
              style={'overflowX': 'scroll', 'maxWidth': '2000px', 'maxHeight': '400px', 'font-family': 'Open Sans'}
              )],
-    style={'padding-top': '10px', 'padding-right': '50px', 'padding-bottom': '50px', 'padding-left': '50px'})
+    style={'padding-top': '50px', 'padding-right': '50px', 'padding-bottom': '50px', 'padding-left': '50px'})
 
 favorites_df = df.sort_values(by=['favorites'], ascending=False)[['username', 'day', 'text', 'favorites']].head(10)
 top10_tweets_by_favorites = html.Div([
@@ -197,16 +213,45 @@ top25_hashtags = html.Div(children=[
                                           )),
     )], style={'padding-top': '10px', 'padding-right': '50px', 'padding-bottom': '50px', 'padding-left': '50px'})
 
+#
+# # Average number of tweets by time of day (EST)
+# df['date'] = pd.to_datetime(df['date'])
+# #df['time'] = df['date'].dt.time
+# df['hour'] = df['date'].dt.strftime('%H')  #:%M')
+# time_of_day_volume = html.Div(children=[
+#     dcc.Graph(
+#         id='time-of-day',
+#         figure={
+#             'data': [
+#                 {'x': df.groupby(['day']).agg({'hour': sum}).sort_values('hour', ascending=True).index.tolist(),
+#                  'y': df.groupby(['day']).agg({'hour': sum}).sort_values('hour', ascending=True),
+#                  #'y': tweet_volume_df['num_tweets'], #df['day'].value_counts().sort_index(),
+#                  'type': 'line',
+#                  #'name': 'SF',
+#                  #'hover_name': tweet_volume_df.index, #df['day'].value_counts().sort_index().index,
+#                  'hovertext': df['hour'] #pd.to_datetime(df['day'].value_counts().sort_index().index).dayofweek.map(day_of_week_mapping)
+#                  },
+#                 #{'x': [1, 2, 3], 'y': [4, 1, 2], 'type': 'bar', 'name': 'SF'},
+#                 #{'x': [1, 2, 3], 'y': [2, 4, 5], 'type': 'bar', 'name': u'Montréal'},
+#             ],
+#             'layout': {
+#                 'title': 'Tweets about Canadian Politics from April - September 2019'
+#             }
+#         }
+#     )
+# ], )#className="six columns")
 
 app.layout = html.Div([
     header,  # header
     html.Div(children=[volume_graph, overview_stats], className="row"),  # first row of grid
     html.Div(children=[top10_accounts_by_tweets,top10_mentions ], className="row"),  # second row of grid,
-    top10_accounts_by_faves,
+    html.Div(children=[top10_accounts_by_faves, top10_accounts_by_retweets], className="row"),  # second row of grid,
+    #top10_accounts_by_faves,
     top10_tweets_by_retweets,  # third row of grid
     top10_tweets_by_favorites,  # fourth row of grid,
     top25_hashtags,  # fifth row of the grid
-                       ])
+    #time_of_day_volume
+])
 
 if __name__ == '__main__':
     app.run_server(debug=True, dev_tools_hot_reload=False)
