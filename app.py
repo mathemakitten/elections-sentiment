@@ -86,29 +86,40 @@ overview_stats = html.Div(children=[
     html.Span(children=[html.B('Number of distinct hashtags: '), len(set(df['hashtags'].str.cat(sep=' ').split(' '))) ]),
 ], className="six columns")
 
-'''
-annotations: [{
-    text: "My SubTitle",
-      font: {
-      size: 13,
-      color: 'rgb(116, 101, 130)',
-    },
-'''
-
 top10_accounts_by_tweets = html.Div(children=[
     dcc.Graph(
         id='top10_accounts_by_tweets',
         figure=go.Figure(data=go.Bar(y=df['username'].value_counts().head(10).index.tolist(),
                                      x=df['username'].value_counts().head(10),
                                      orientation='h'),
-                         layout=go.Layout(title='Top 10 Accounts by Tweets',
+                         layout=go.Layout(title='Top 10 Accounts by Number of Tweets',
                                           hovermode='closest',
                                           xaxis={'title': 'number of tweets'},
                                           yaxis={'autorange': 'reversed'},
                                           font={'family': 'Arial', 'size': 14}
                                           )),
     ),
-    html.Span(children=[html.P('This graph aims to capture tweeters by tweet volume.')], style={'text-align': 'center'})
+    html.Span(children=[html.P('Who talks the most?')], style={'text-align': 'center'})
+], className="six columns")
+
+# top 10 mentions by Twitter handles
+all_mentions = df['mentions'].str.cat(sep=' ').split(' ')
+mentions_df = pd.DataFrame(Counter(all_mentions).most_common(10), columns=['mentions', 'count'])
+top10_mentions = html.Div(children=[
+    dcc.Graph(
+        id='top10_mentions',
+        figure=go.Figure(data=go.Bar(x=mentions_df['mentions'],
+                                     y=mentions_df['count'],
+                                     orientation='v'
+),
+                         layout=go.Layout(title='Top 10 Accounts @Mentioned',
+                                          hovermode='closest',
+                                          xaxis={'title': 'user', 'tickangle': -60},
+                                          yaxis={'title': 'times mentioned'},
+                                          font={'family': 'Arial', 'size': 14}
+                                          )),
+    ),
+    html.Span(children=[html.P('Who do people mention the most?')], style={'text-align': 'center'})
 ], className="six columns")
 
 
@@ -170,18 +181,18 @@ top10_tweets_by_favorites = html.Div([
     style={'padding-top': '10px', 'padding-right': '50px', 'padding-bottom': '50px', 'padding-left': '50px'})
 
 
-# Top 50 hashtags
+# Top 25 hashtags
 all_hashtags = df['hashtags'].str.cat(sep=' ').split(' ')
-hashtag_counts = pd.DataFrame(Counter(all_hashtags).most_common(50), columns=['hashtag', 'count'])
+hashtag_counts = pd.DataFrame(Counter(all_hashtags).most_common(25), columns=['hashtag', 'count'])
 
-top10_hashtags = html.Div(children=[
-    html.Span(html.H5(children='Top 50 Popular Hashtags'), style={'text-align': 'center'}),
+top25_hashtags = html.Div(children=[
+    html.Span(html.H5(children='Top 25 Popular Hashtags'), style={'text-align': 'center'}),
     dcc.Graph(
-        id='top10_hashtags',
+        id='top25_hashtags',
         figure=go.Figure(data=go.Bar(y=hashtag_counts['count'],
                                      x=hashtag_counts['hashtag']),
                          layout=go.Layout(hovermode='closest',
-                                          xaxis={'tickangle': -90}, yaxis={'title': 'number of times tweeted'},
+                                          xaxis={'tickangle': -60}, yaxis={'title': 'number of times tweeted'},
                                           font={'family': 'Arial'}, margin=dict(l=50, r=50, t=20, b=20)
                                           )),
     )], style={'padding-top': '10px', 'padding-right': '50px', 'padding-bottom': '50px', 'padding-left': '50px'})
@@ -190,10 +201,11 @@ top10_hashtags = html.Div(children=[
 app.layout = html.Div([
     header,  # header
     html.Div(children=[volume_graph, overview_stats], className="row"),  # first row of grid
-    html.Div(children=[top10_accounts_by_tweets, top10_accounts_by_faves], className="row"),  # second row of grid,
+    html.Div(children=[top10_accounts_by_tweets,top10_mentions ], className="row"),  # second row of grid,
+    top10_accounts_by_faves,
     top10_tweets_by_retweets,  # third row of grid
     top10_tweets_by_favorites,  # fourth row of grid,
-    top10_hashtags,  # fifth row of the grid
+    top25_hashtags,  # fifth row of the grid
                        ])
 
 if __name__ == '__main__':
