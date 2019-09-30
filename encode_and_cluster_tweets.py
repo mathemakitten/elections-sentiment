@@ -1,4 +1,5 @@
-# This is a replacement for cluster-tweets-unsupervised.ipynb, which kept disconnecting due to network issues
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 import tensorflow as tf
 import glob
@@ -92,19 +93,27 @@ from nltk import word_tokenize
 # os.environ['JAVAHOME'] = '/usr/bin/java'
 #
 # # Add the jar and model via their path (instead of setting environment variables):
-# jar = 'stanford-postagger-2018-10-16/stanford-postagger-3.9.2.jar'
-# model = 'stanford-postagger-2018-10-16/models/english-left3words-distsim.tagger'
-# pos_tagger = StanfordPOSTagger(model, jar, encoding='utf8')
+jar = 'stanford-postagger-2018-10-16/stanford-postagger-3.9.2.jar'
+model = 'stanford-postagger-2018-10-16/models/english-left3words-distsim.tagger'
+pos_tagger = StanfordPOSTagger(model, jar, encoding='utf8')
 
+df['text_clean'] = df['text'].str.lower()
 
 if not os.path.isfile('cache/all_tweets_embedded.pkl'):
     logger.info("Running sentence embedding")
-    from nltk.parse.corenlp import CoreNLPParser
-    st = CoreNLPParser()
-    # TODO finish correct tokenization
+    #from nltk.parse.corenlp import CoreNLPParser
+    os.environ['CLASSPATH'] = 'stanford-postagger-2018-10-16'
+    #st = CoreNLPParser()
+    #st.tokenize(df['text_clean'])
+
+    logger.info("Tokenizing tweets with Stanford tokenizer...")
+    from nltk.tokenize.stanford import StanfordTokenizer
+    df['text_clean'] = [StanfordTokenizer().tokenize(x) for x in df['text_clean']]
+    logger.info("Finish tokenizing tweets")
+    StanfordTokenizer().tokenize(df['text_clean'])
 
     logger.info("Splitting sentences into batches")
-    tweets_to_embed = list(df['text'])
+    tweets_to_embed = list(df['text_clean'])
     tweets_to_embed = [st.tokenize((tweet)) for tweet in tweets_to_embed]
     sentences_batched = list(split_sentences(tweets_to_embed, 200000))
     logger.info("Done batching tweets")
