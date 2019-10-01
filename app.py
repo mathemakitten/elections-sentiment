@@ -291,12 +291,12 @@ leader_df['days_until_election'] = [(x - datetime.date(2019, 10, 21)).days for x
 # Tweet volume by political party leader over time
 leader_tweet_volume = html.Div([
     dcc.Graph(id='graph-with-slider'),
-    dcc.Slider(
+    dcc.RangeSlider(
         id='day-slider',
         min=leader_df['days_until_election'].min(),
         max=leader_df['days_until_election'].max(),
-        value=leader_df['days_until_election'].max(),
-        marks={str(day): str(day) for day in sorted(leader_df['days_until_election'].unique())},
+        value=[leader_df['days_until_election'].min(), leader_df['days_until_election'].max()],
+        marks={str(day): str(-day) for day in sorted(leader_df['days_until_election'].unique())},
         step=None
     )
 ], style={'padding-left': '50px', 'padding-right': '50px', 'padding-top': '50px', 'padding-bottom': '50px'})
@@ -326,7 +326,7 @@ app.layout = html.Div([
     Output('graph-with-slider', 'figure'),
     [Input('day-slider', 'value')])
 def update_figure(selected_day):
-    filtered_leader_df = leader_df[leader_df.days_until_election < selected_day]
+    filtered_leader_df = leader_df[(leader_df.days_until_election >= selected_day[0]) & (leader_df.days_until_election <= selected_day[1])]
     traces = []
     for i in filtered_leader_df.username.unique():
         df_by_leader = filtered_leader_df[filtered_leader_df['username'] == i]
