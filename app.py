@@ -281,7 +281,7 @@ tweet_volume_hourly = html.Div(children=[
 ], style={'padding-bottom': '50px'})
 
 
-header_politician = html.Div(children=[html.H3(children='Breakdown by Political Party Leader')], style={'padding-top': '50px', 'padding-bottom': '50px'})
+header_politician = html.Div(children=[html.H3(children='Breakdown by Political Party Leader')], style={'padding-top': '120px', 'padding-bottom': '50px'})
 
 # POLITICAL PARTY LEADERS
 LEADER_USERNAMES = ['JustinTrudeau', 'AndrewScheer', 'ElizabethMay', 'theJagmeetSingh', 'yfblanchet']
@@ -297,9 +297,10 @@ leader_tweet_volume = html.Div([
         max=leader_df['days_until_election'].max(),
         value=[leader_df['days_until_election'].min(), leader_df['days_until_election'].max()],
         marks={str(day): str(-day) for day in sorted(leader_df['days_until_election'].unique())},
+        # TODO figure out how to rotate tick marks - https://community.plot.ly/t/how-to-rotate-labels-on-rangeslider/6666
         step=None
     )
-], style={'padding-left': '50px', 'padding-right': '50px', 'padding-top': '50px', 'padding-bottom': '50px'})
+], style={'padding-left': '50px', 'padding-right': '50px', 'padding-top': '10px', 'padding-bottom': '50px'})
 
 
 
@@ -322,6 +323,7 @@ app.layout = html.Div([
 
 
 # CALLBACKS
+color_dict = {'AndrewScheer': '#1A4782', 'JustinTrudeau': '#D71920', 'theJagmeetSingh': '#F37021', 'ElizabethMay': '#3D9B35', 'yfblanchet': '#33B2CC'}
 @app.callback(
     Output('graph-with-slider', 'figure'),
     [Input('day-slider', 'value')])
@@ -338,7 +340,8 @@ def update_figure(selected_day):
             opacity=0.7,
             marker={
                  'size': 7,
-                 'line': {'width': 0.5, 'color': 'white'}
+                 'line': {'width': 0.5, 'color': 'white'},
+                'color': color_dict[i]
              },
             name=i
         ))
@@ -346,10 +349,10 @@ def update_figure(selected_day):
     return {
         'data': traces,
         'layout': go.Layout(
-            title='blah',
+            title='How much does each party leader tweet leading up to the election?',
             xaxis={'title': 'days until election'},
             yaxis={'title': 'number of tweets'},#, 'range': [0, 100]},
-            margin={'l': 40, 'b': 40, 't': 10, 'r': 10},
+            margin={'l': 40, 'b': 40, 't': 30, 'r': 10},
             legend={'x': 0, 'y': 1},
             hovermode='closest',
         )
