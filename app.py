@@ -203,57 +203,6 @@ top25_hashtags = html.Div(children=[
     )], style={'padding-top': '10px', 'padding-right': '50px', 'padding-bottom': '50px', 'padding-left': '50px'})
 
 
-
-
-
-# Top external links
-links_df, all_urls = data_prep_links_df(df)
-top10_links = html.Div([
-    html.H5(children='Top 10 External Links'),
-    html.Span(children=[html.P('What are people sharing on Twitter?')]),
-    html.Div(children=[dash_table.DataTable(id='top10_links',
-                                            columns=[{"name": i, "id": i} for i in links_df.columns],
-                                            data=links_df.to_dict('records'),
-                                            style_table={'overflowX': 'scroll'},
-                                            style_cell={'height': 'auto',
-                                                        'minWidth': '0px', 'Width': '500px',
-                                                        'whiteSpace': 'normal',
-                                                        'font-family': "Arial",
-                                                        'font-size': 12,
-                                                        'text-align': 'left'
-                                                        },
-                                            style_as_list_view=True,
-                                            style_header={'backgroundColor': 'rgb(230, 230, 230)', 'fontWeight': 'bold'}
-                                            )],
-             style={'overflowX': 'scroll', 'Width': '2000px', 'Height': '400px', 'font-family': 'Open Sans'}
-             ),
-    ],
-    className="six columns",
-    style={'padding-top': '0px', 'padding-right': '5px', 'padding-bottom': '50px', 'padding-left': '20px'})
-
-# Top 10 domains linked
-domains_df = data_prep_domains_df(all_urls)
-
-top10_domains = html.Div(children=[
-    html.Span(html.H5(children='Top 10 External Domains'), style={'text-align': 'center'}),
-    dcc.Graph(
-        id='top10_domains',
-        figure=go.Figure(data=go.Bar(y=domains_df['domain'],
-                                     x=domains_df['count'],
-                                     orientation='h'
-                                     ),
-                         layout=go.Layout(  # title='Top 10 External Domains',
-                             hovermode='closest',
-                             xaxis={'title': 'times linked'},
-                             yaxis={'autorange': 'reversed'},
-                             font={'family': 'Arial', 'size': 12},
-                             margin=dict(l=25, r=50, t=20, b=0)
-                         )),
-    ),
-    html.Span(children=[html.P('Which websites do people link to the most?')], style={'text-align': 'center'})
-], className="six columns", style={'height': '400px'})
-
-
 # Average number of tweets by time of day (EST)
 df['date'] = pd.to_datetime(df['date'])
 df['hour'] = df['date'].dt.strftime('%H')  #:%M')
@@ -281,12 +230,82 @@ tweet_volume_hourly = html.Div(children=[
 ], style={'padding-bottom': '50px'})
 
 
-header_politician = html.Div(children=[html.H3(children='Breakdown by Political Party Leader')], style={'padding-top': '120px', 'padding-bottom': '50px'})
+# Top external links
+links_df, all_urls = data_prep_links_df(df)
+top10_links = html.Div([
+    html.H5(children='Top 10 External Links'),
+    html.Span(children=[html.P('What are people sharing on Twitter?')]),
+    html.Div(children=[dash_table.DataTable(id='top10_links',
+                                            columns=[{"name": i, "id": i} for i in links_df.columns],
+                                            data=links_df.to_dict('records'),
+                                            style_table={'overflowX': 'scroll'},
+                                            style_cell={'height': 'auto',
+                                                        'minWidth': '0px', 'Width': '500px',
+                                                        'whiteSpace': 'normal',
+                                                        'font-family': "Arial",
+                                                        'font-size': 12,
+                                                        'text-align': 'left'
+                                                        },
+                                            style_as_list_view=True,
+                                            style_header={'backgroundColor': 'rgb(230, 230, 230)', 'fontWeight': 'bold'}
+                                            )],
+             style={'overflowX': 'scroll', 'Width': '2000px', 'Height': '400px', 'font-family': 'Open Sans'}
+             ),
+    ],
+    className="six columns",
+    style={'padding-top': '0px', 'padding-right': '5px', 'padding-bottom': '50px', 'padding-left': '20px'})
+
+
+# Top 10 domains linked
+domains_df = data_prep_domains_df(all_urls)
+
+top10_domains = html.Div(children=[
+    html.Span(html.H5(children='Top 10 External Domains'), style={'text-align': 'center'}),
+    dcc.Graph(
+        id='top10_domains',
+        figure=go.Figure(data=go.Bar(y=domains_df['domain'],
+                                     x=domains_df['count'],
+                                     orientation='h'
+                                     ),
+                         layout=go.Layout(  # title='Top 10 External Domains',
+                             hovermode='closest',
+                             xaxis={'title': 'times linked'},
+                             yaxis={'autorange': 'reversed'},
+                             font={'family': 'Arial', 'size': 12},
+                             margin=dict(l=25, r=50, t=20, b=0),
+                             height=350
+                         )),
+    ),
+    html.Span(children=[html.P('Which websites do people link to the most?')], style={'text-align': 'center'})
+], className="six columns", style={'height': '400px'})
+
+
+header_politician = html.Div(children=[html.H3(children='Breakdown by Political Party Leader')], style={'padding-top': '80px', 'padding-bottom': '20px'})
 
 # POLITICAL PARTY LEADERS
 LEADER_USERNAMES = ['JustinTrudeau', 'AndrewScheer', 'ElizabethMay', 'theJagmeetSingh', 'yfblanchet']
 leader_df = df[df['username'].isin(LEADER_USERNAMES)]  #df[df['A'].isin([3, 6])]
 leader_df['days_until_election'] = [(x - datetime.date(2019, 10, 21)).days for x in pd.to_datetime(leader_df['day']).dt.date]
+
+leader_id_cards = []
+import tweepy
+from secrets import *
+auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+auth.set_access_token(access_key, access_secret)
+api = tweepy.API(auth)
+
+leader_profile = {}
+for leader in LEADER_USERNAMES:
+    user = api.get_user(leader)
+    leader_profile[leader] = user
+    leader_id_cards.append(html.Div([
+        html.P([html.B([user.name])]),
+        html.Img(src=user.profile_image_url.replace('_normal', ''), style={'max-width': '50%'}),
+        html.P("Location: {}".format(user.location)),
+        html.P("Followers: {}".format(user.followers_count)),
+        html.P("Tweets: {}".format(user.statuses_count)),
+    ], className="two columns", style={'font-family': 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", sans-serif;'}))
+
 
 # Tweet volume by political party leader over time
 leader_tweet_volume = html.Div([
@@ -300,9 +319,86 @@ leader_tweet_volume = html.Div([
         # TODO figure out how to rotate tick marks - https://community.plot.ly/t/how-to-rotate-labels-on-rangeslider/6666
         step=None
     )
-], style={'padding-left': '50px', 'padding-right': '50px', 'padding-top': '10px', 'padding-bottom': '50px'})
+], style={'padding-left': '50px', 'padding-right': '50px', 'padding-top': '50px', 'padding-bottom': '20px'})
+
+# Header for hashtags by politicians
+hashtags_politician_header = html.Div(children=[html.H3(children='Top 10 Hashtags by Political Party Leader')], style={'padding-top': '50px', 'padding-bottom': '10px'})
+
+# What are the politicians tweeting about? (hashtags)
+'''
+all_hashtags = df['hashtags'].str.cat(sep=' ').split(' ')
+    hashtag_counts_df = pd.DataFrame(Counter(all_hashtags).most_common(25), columns=['hashtag', 'count'])
+'''
+
+hashtag_leader_cards = []  # container for dumping into a div later
+leader_hashtag_counts = {}
+for leader in LEADER_USERNAMES:
+    leader_hashtags = df[df['username'] == leader]['hashtags'].str.cat(sep=' ').split(' ')
+    leader_hashtag_counts_df = pd.DataFrame(Counter(leader_hashtags).most_common(10), columns=['hashtag', 'count'])
+    leader_hashtag_counts[leader] = leader_hashtag_counts_df
+    hashtag_leader_cards.append(html.Div([html.P(children=[leader]),
+                                          html.Div(children=[dash_table.DataTable(id='top_hashtags_by_leader_{}'.format(leader),
+                                                columns=[{"name": i, "id": i} for i in leader_hashtag_counts_df.columns],
+                                                data=leader_hashtag_counts[leader].to_dict('records'),
+                                                style_table={'overflowX': 'scroll'},
+                                                style_cell={'height': 'auto',
+                                                            'minWidth': '0px',
+                                                            'maxWidth': '115px',
+                                                            'whiteSpace': 'normal',
+                                                            'font-family': "Arial",
+                                                            'font-size': 12
+                                                            },
+                                                style_as_list_view=True,
+                                                style_header={'backgroundColor': color_dict[leader],#'rgb(230, 230, 230)',
+                                                              'fontWeight': 'bold',
+                                                              'font-color': 'white'}
+                                                )],
+                 style={'overflowX': 'scroll', 'Height': '400px', 'font-family': 'Open Sans'}
+                 )
+    ], className="two columns",))
 
 
+# Top 10 tweets by leader by likes
+top10_tweets_by_leader_likes = html.Div([
+    html.H5(children='Top 10 tweets by Leader, by Favorites'),
+    dcc.Dropdown(
+            id='leader-likes-dd',
+            options=[{'label': i, 'value': i} for i in LEADER_USERNAMES],
+            value=1,
+        ),
+    dash_table.DataTable(id='leader-likes-graph', columns=[{"name": i, "id": i} for i in ['day','text', 'favorites']],
+                         style_table={'overflowX': 'scroll'},
+                                            style_cell={'height': 'auto',
+                                                        'minWidth': '100px', 'Width': '500px',
+                                                        'whiteSpace': 'normal',
+                                                        'font-family': "Arial",
+                                                        'font-size': 12
+                                                        },
+                                            style_as_list_view=True,
+                                            style_header={'backgroundColor': 'rgb(230, 230, 230)', 'fontWeight': 'bold'}
+                         ),
+    ], style={'padding-left': '50px', 'padding-right': '50px', 'padding-top': '50px', 'padding-bottom': '20px'})
+
+# Top 10 tweets by leader by retweets
+top10_tweets_by_leader_retweets = html.Div([
+    html.H5(children='Top 10 tweets by Leader, by Retweets'),
+    dcc.Dropdown(
+            id='leader-retweets-dd',
+            options=[{'label': i, 'value': i} for i in LEADER_USERNAMES],
+            value=1,
+        ),
+    dash_table.DataTable(id='leader-retweets-graph', columns=[{"name": i, "id": i} for i in ['day', 'text', 'retweets']],
+                         style_table={'overflowX': 'scroll'},
+                                            style_cell={'height': 'auto',
+                                                        'minWidth': '100px', 'Width': '500px',
+                                                        'whiteSpace': 'normal',
+                                                        'font-family': "Arial",
+                                                        'font-size': 12
+                                                        },
+                                            style_as_list_view=True,
+                                            style_header={'backgroundColor': 'rgb(230, 230, 230)', 'fontWeight': 'bold'}
+                         ),
+    ], style={'padding-left': '50px', 'padding-right': '50px', 'padding-top': '50px', 'padding-bottom': '20px'})
 
 
 
@@ -318,12 +414,16 @@ app.layout = html.Div([
     tweet_volume_hourly,
     html.Div(children=[top10_links, top10_domains], className="row"),
     header_politician,
-    leader_tweet_volume
+    html.Div(children=leader_id_cards, className="row"),
+    leader_tweet_volume,
+    hashtags_politician_header,
+    html.Div(children=hashtag_leader_cards, className="row"),
+    top10_tweets_by_leader_likes,
+    top10_tweets_by_leader_retweets
 ], style={'padding-left': '50px', 'padding-right': '50px', 'padding-top': '50px', 'padding-bottom': '50px'})
 
 
 # CALLBACKS
-color_dict = {'AndrewScheer': '#1A4782', 'JustinTrudeau': '#D71920', 'theJagmeetSingh': '#F37021', 'ElizabethMay': '#3D9B35', 'yfblanchet': '#33B2CC'}
 @app.callback(
     Output('graph-with-slider', 'figure'),
     [Input('day-slider', 'value')])
@@ -357,6 +457,17 @@ def update_figure(selected_day):
             hovermode='closest',
         )
     }
+
+
+@app.callback(Output('leader-likes-graph', 'data'), [Input('leader-likes-dd', 'value')])
+def update_leader_likes(leader):
+    filtered_leader_df = leader_df[(leader_df['username'] == leader)].sort_values(by=['favorites'], ascending=False)[['day', 'text', 'favorites']].head(10).sort_values(by=['favorites'], ascending=False)
+    return filtered_leader_df.to_dict('records')
+
+@app.callback(Output('leader-retweets-graph', 'data'), [Input('leader-retweets-dd', 'value')])
+def update_leader_retweets(leader):
+    filtered_leader_df = leader_df[(leader_df['username'] == leader)].sort_values(by=['retweets'], ascending=False)[['day', 'text', 'retweets']].head(10).sort_values(by=['retweets'], ascending=False)
+    return filtered_leader_df.to_dict('records')
 
 
 
