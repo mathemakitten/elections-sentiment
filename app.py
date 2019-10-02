@@ -254,7 +254,7 @@ for leader in LEADER_USERNAMES:
         html.P("Location: {}".format(user.location)),
         html.P("Followers: {}".format(user.followers_count)),
         html.P("Tweets: {}".format(user.statuses_count)),
-    ], className="two columns", style={'font-family': 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", sans-serif;'}))
+    ], className="two columns", style={'padding-left': '50px', 'font-family': 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", sans-serif;'}))
 
 
 # Graph: Tweet volume by political party leader over time
@@ -263,8 +263,7 @@ leader_tweet_volume = html.Div([
     dcc.RangeSlider(id='day-slider',
                     min=leader_df['days_until_election'].min(), max=leader_df['days_until_election'].max(),
                     value=[leader_df['days_until_election'].min(), leader_df['days_until_election'].max()],
-                    marks={str(day): str(-day) for day in sorted(leader_df['days_until_election'].unique())},
-                    # TODO figure out how to rotate tick marks - https://community.plot.ly/t/how-to-rotate-labels-on-rangeslider/6666
+                    marks={str(day): {'label': str(-day), 'style': {"transform": "rotate(-90deg)", 'fontSize': 8}} for day in sorted([x for x in leader_df['days_until_election'].unique() if x % 5 == 0])},
                     step=None
                     )
 ], style={'padding-left': '50px', 'padding-right': '50px', 'padding-top': '50px', 'padding-bottom': '20px'})
