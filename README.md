@@ -22,6 +22,11 @@ campaigns on the election as of September 24 2019
 * As of end of September, ~900k tweets with 15 columns: `'username', 'to', 'text', 'retweets', 'favorites', 'replies', 'id',
        'permalink', 'author_id', 'date', 'formatted_date', 'mentions',
        'hashtags', 'geo', 'urls'`
+       
+## Methodology
+* The dashboard is built with Plotly + Dash, and (will be) hosted on Google App Engine
+* Tweets are encoded with Universal Sentence Encoder after tokenization with
+the NLTK `TweetTokenizer`
 
 ## Limitations
 *  Twitter data needs to be re-scraped every few days because favorites & retweets are monotonically 
