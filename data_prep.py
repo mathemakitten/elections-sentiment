@@ -2,6 +2,8 @@ import glob
 import pandas as pd
 from collections import Counter
 import datetime
+import os
+import pickle
 
 # Constants
 day_of_week_mapping = {0: 'Monday', 1: 'Tuesday', 2: 'Wednesday', 3: 'Thursday', 4: 'Friday', 5: 'Saturday', 6: 'Sunday'}
@@ -15,66 +17,135 @@ hour_dict = {'00': 'Midnight', '01': '1:00 AM', '02': '2:00 AM', '03': '3:00 AM'
 # TODO CACHE ALL OF THESE
 
 def load_and_clean_data():
-    files = glob.glob('tweets/cdnpoli_*.csv') #[0:30] #TODO get rid of this sample
-    df = pd.read_csv(files[0])
 
-    for file in files[1:]:
-        df_tmp = pd.read_csv(file)
-        df = pd.concat([df, df_tmp])
+    THIS_FILE = 'cache/df.pkl'
 
-    df['day'] = pd.to_datetime(df['date']).dt.date
-    df['day_of_week'] = [x.weekday() for x in df['day']]
-    df.replace({'day_of_week': day_of_week_mapping})
+    if not os.path.isfile(THIS_FILE):
+        files = glob.glob('tweets/cdnpoli_*.csv') #[0:30] #TODO get rid of this sample
+        df = pd.read_csv(files[0])
 
+        for file in files[1:]:
+            df_tmp = pd.read_csv(file)
+            df = pd.concat([df, df_tmp])
+
+        df['day'] = pd.to_datetime(df['date']).dt.date
+        df['day_of_week'] = [x.weekday() for x in df['day']]
+        df.replace({'day_of_week': day_of_week_mapping})
+
+        pickle.dump(df, open(THIS_FILE, 'wb'))
+    else:
+        print("Loading {} from cache".format(THIS_FILE))
+        df = pickle.load(open(THIS_FILE, 'rb'))
     return df
 
 
 def data_prep_calculate_tweet_volume(df):
-    tweet_volume_df = pd.DataFrame(data={'num_tweets': df['day'].value_counts().sort_index(),
-                                         'day_of_week': pd.to_datetime(df['day'].value_counts().sort_index().index).dayofweek.map(day_of_week_mapping)},
-                                   index=df['day'].value_counts().sort_index().index)
+
+    THIS_FILE = 'cache/tweet_volume_df.pkl'
+
+    if not os.path.isfile(THIS_FILE):
+        tweet_volume_df = pd.DataFrame(data={'num_tweets': df['day'].value_counts().sort_index(),
+                                             'day_of_week': pd.to_datetime(df['day'].value_counts().sort_index().index).dayofweek.map(day_of_week_mapping)},
+                                       index=df['day'].value_counts().sort_index().index)
+        pickle.dump(tweet_volume_df, open(THIS_FILE, 'wb'))
+    else:
+        print("Loading {} from cache".format(THIS_FILE))
+        tweet_volume_df = pickle.load(open(THIS_FILE, 'rb'))
     return tweet_volume_df
 
 
 def data_prep_retweet_df(df):
-    retweet_df = df.sort_values(by=['retweets'], ascending=False)[['username', 'day', 'text', 'retweets']].head(10)
+
+    THIS_FILE = 'cache/retweet_df.pkl'
+
+    if not os.path.isfile(THIS_FILE):
+        retweet_df = df.sort_values(by=['retweets'], ascending=False)[['username', 'day', 'text', 'retweets']].head(10)
+        pickle.dump(retweet_df, open(THIS_FILE, 'wb'))
+    else:
+        print("Loading {} from cache".format(THIS_FILE))
+        retweet_df = pickle.load(open(THIS_FILE, 'rb'))
     return retweet_df
 
 
 def data_prep_favorites_df(df):
+
+    # Note: decided not to cache this because I suspect it's faster to run this in-memory than load from disk?
     return df.sort_values(by=['favorites'], ascending=False)[['username', 'day', 'text', 'favorites']].head(10)
 
 
 def data_prep_top10_mentions(df):
-    all_mentions = df['mentions'].str.cat(sep=' ').split(' ')
-    mentions_df = pd.DataFrame(Counter(all_mentions).most_common(10), columns=['mentions', 'count'])
+
+    THIS_FILE = 'cache/mentions_df.pkl'
+
+    if not os.path.isfile(THIS_FILE):
+        all_mentions = df['mentions'].str.cat(sep=' ').split(' ')
+        mentions_df = pd.DataFrame(Counter(all_mentions).most_common(10), columns=['mentions', 'count'])
+        pickle.dump(mentions_df, open(THIS_FILE, 'wb'))
+    else:
+        print("Loading {} from cache".format(THIS_FILE))
+        mentions_df = pickle.load(open(THIS_FILE, 'rb'))
     return mentions_df
 
 
 def data_prep_top10_accounts_fave(df):
-    top10_accounts_faves_df = df.groupby(['username']).agg({'favorites': sum}).sort_values('favorites', ascending=False).head(10)['favorites']
+
+    THIS_FILE = 'cache/top10_accounts_faves_df.pkl'
+
+    if not os.path.isfile(THIS_FILE):
+        top10_accounts_faves_df = df.groupby(['username']).agg({'favorites': sum}).sort_values('favorites', ascending=False).head(10)
+        pickle.dump(top10_accounts_faves_df, open(THIS_FILE, 'wb'))
+    else:
+        print("Loading {} from cache".format(THIS_FILE))
+        top10_accounts_faves_df = pickle.load(open(THIS_FILE, 'rb'))
+
     return top10_accounts_faves_df
 
 
 def data_prep_top10_accounts_retweets(df):
-    top10_accounts_retweets_df = df.groupby(['username']).agg({'retweets': sum}).sort_values('retweets', ascending=False).head(10)
+
+    THIS_FILE = 'cache/top10_accounts_retweets_df.pkl'
+
+    if not os.path.isfile(THIS_FILE):
+        top10_accounts_retweets_df = df.groupby(['username']).agg({'retweets': sum}).sort_values('retweets', ascending=False).head(10)
+        pickle.dump(top10_accounts_retweets_df, open(THIS_FILE, 'wb'))
+    else:
+        print("Loading {} from cache".format(THIS_FILE))
+        top10_accounts_retweets_df = pickle.load(open(THIS_FILE, 'rb'))
+
     return top10_accounts_retweets_df
 
 
 def data_prep_hashtag_counts_df(df):
-    all_hashtags = df['hashtags'].str.cat(sep=' ').split(' ')
-    hashtag_counts_df = pd.DataFrame(Counter(all_hashtags).most_common(25), columns=['hashtag', 'count'])
+
+    THIS_FILE = 'cache/hashtag_counts_df.pkl'
+
+    if not os.path.isfile(THIS_FILE):
+        all_hashtags = df['hashtags'].str.cat(sep=' ').split(' ')
+        hashtag_counts_df = pd.DataFrame(Counter(all_hashtags).most_common(25), columns=['hashtag', 'count'])
+        pickle.dump(hashtag_counts_df, open(THIS_FILE, 'wb'))
+    else:
+        print("Loading {} from cache".format(THIS_FILE))
+        hashtag_counts_df = pickle.load(open(THIS_FILE, 'rb'))
     return hashtag_counts_df
 
 
 def data_prep_tweets_by_time(df):
-    df['date'] = pd.to_datetime(df['date'])
-    df['hour'] = df['date'].dt.strftime('%H')
-    average_number_of_tweets_per_hour = df.groupby(['hour'])['hour'].count() / df['day'].nunique()
+
+    THIS_FILE = 'cache/average_number_of_tweets_per_hour.pkl'
+
+    if not os.path.isfile(THIS_FILE):
+        df['date'] = pd.to_datetime(df['date'])
+        df['hour'] = df['date'].dt.strftime('%H')
+        average_number_of_tweets_per_hour = df.groupby(['hour'])['hour'].count() / df['day'].nunique()
+        pickle.dump(average_number_of_tweets_per_hour, open(THIS_FILE, 'wb'))
+    else:
+        print("Loading {} from cache".format(THIS_FILE))
+        average_number_of_tweets_per_hour = pickle.load(open(THIS_FILE, 'rb'))
     return average_number_of_tweets_per_hour
 
 
 def data_prep_links_df(df):
+    # TODO: cache this, maybe (needs to return 2 things)
     links_to_keep = []
     all_urls = df['urls'].str.cat(sep=' ').split(' ')
     for link in all_urls:
@@ -85,12 +156,20 @@ def data_prep_links_df(df):
 
 
 def data_prep_domains_df(all_urls):
-    from urllib.parse import urlparse
-    domains = []
-    for link in all_urls:
-        if all(x not in link for x in ['twitter', 'bit.ly', 'ow.ly']):
-            domains.append(urlparse(link).netloc)
-    domains_df = pd.DataFrame(Counter(domains).most_common(10), columns=['domain', 'count'])
+
+    THIS_FILE = 'cache/domains_df.pkl'
+
+    if not os.path.isfile(THIS_FILE):
+        from urllib.parse import urlparse
+        domains = []
+        for link in all_urls:
+            if all(x not in link for x in ['twitter', 'bit.ly', 'ow.ly']):
+                domains.append(urlparse(link).netloc)
+        domains_df = pd.DataFrame(Counter(domains).most_common(10), columns=['domain', 'count'])
+        pickle.dump(domains_df, open(THIS_FILE, 'wb'))
+    else:
+        print("Loading {} from cache".format(THIS_FILE))
+        domains_df = pickle.load(open(THIS_FILE, 'rb'))
     return domains_df
 
 
@@ -101,9 +180,17 @@ def data_prep_leader_df(df):
 
 
 def data_prep_count_hashtags_by_leader(df):
-    leader_hashtag_counts = {}
-    for leader in LEADER_USERNAMES:
-        leader_hashtags = df[df['username'] == leader]['hashtags'].str.cat(sep=' ').split(' ')
-        leader_hashtag_counts_df = pd.DataFrame(Counter(leader_hashtags).most_common(10), columns=['hashtag', 'count'])
-        leader_hashtag_counts[leader] = leader_hashtag_counts_df
+
+    THIS_FILE = 'cache/leader_hashtag_counts.pkl'
+
+    if not os.path.isfile(THIS_FILE):
+        leader_hashtag_counts = {}
+        for leader in LEADER_USERNAMES:
+            leader_hashtags = df[df['username'] == leader]['hashtags'].str.cat(sep=' ').split(' ')
+            leader_hashtag_counts_df = pd.DataFrame(Counter(leader_hashtags).most_common(10), columns=['hashtag', 'count'])
+            leader_hashtag_counts[leader] = leader_hashtag_counts_df
+        pickle.dump(leader_hashtag_counts, open(THIS_FILE, 'wb'))
+    else:
+        print("Loading {} from cache".format(THIS_FILE))
+        leader_hashtag_counts = pickle.load(open(THIS_FILE, 'rb'))
     return leader_hashtag_counts

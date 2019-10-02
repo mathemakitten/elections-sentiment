@@ -331,12 +331,12 @@ top10_tweets_by_leader_retweets = html.Div([
 
 # Main container
 app.layout = html.Div([
-    header,  # header
+    header,
     html.Div(children=[volume_graph, overview_stats], className="row"),
     html.Div(children=[top10_accounts_by_tweets, top10_mentions], className="row"),
     html.Div(children=[top10_accounts_by_faves, top10_accounts_by_retweets], className="row"),
     top10_tweets_by_retweets,
-    top10_tweets_by_favorites,  # fourth row of grid,
+    top10_tweets_by_favorites,
     html.Div(children=[top25_hashtags, tweet_volume_hourly], className="row"),
     html.Div(children=[top10_links, top10_domains], className="row"),
     header_politician,
