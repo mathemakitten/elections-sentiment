@@ -5,6 +5,8 @@ from collections import Counter
 # Constants
 day_of_week_mapping = {0: 'Monday', 1: 'Tuesday', 2: 'Wednesday', 3: 'Thursday', 4: 'Friday', 5: 'Saturday', 6: 'Sunday'}
 color_dict = {'AndrewScheer': '#1A4782', 'JustinTrudeau': '#D71920', 'theJagmeetSingh': '#F37021', 'ElizabethMay': '#3D9B35', 'yfblanchet': '#33B2CC'}
+LEADER_USERNAMES = ['JustinTrudeau', 'AndrewScheer', 'ElizabethMay', 'theJagmeetSingh', 'yfblanchet']
+
 
 def load_and_clean_data():
     files = glob.glob('tweets/cdnpoli_*.csv')[0:30] #TODO get rid of this sample
