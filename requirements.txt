@@ -12,7 +12,12 @@ scikit-learn
 seaborn
 tensorflow-gpu==1.14.0
 tensorflow-hub
+tf-sentencepiece==0.1.82.1
 wordcloud
 #nb_conda_kernels
 #ipykernel
+
+tf-sentencepiece>=0.1.83
+tensorflow==1.14.0
+
 #notebook==5.7.4

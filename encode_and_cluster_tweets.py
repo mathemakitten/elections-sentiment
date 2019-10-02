@@ -1,7 +1,6 @@
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-import tensorflow as tf
 import glob
 import pandas as pd
 import numpy as np
@@ -11,12 +10,20 @@ from sklearn.cluster import KMeans
 
 import tensorflow_hub as hub
 import tensorflow as tf
-import random
 
 import pickle
 import os
 
+from nltk.tokenize import TweetTokenizer
+from nltk.tokenize.treebank import TreebankWordDetokenizer
+
 logger = get_logger("LOGGER")
+
+from nltk.tag import StanfordPOSTagger
+# Add the jar and model via their path (instead of setting environment variables):
+jar = 'stanford-postagger-2018-10-16/stanford-postagger-3.9.2.jar'
+model = 'stanford-postagger-2018-10-16/models/english-left3words-distsim.tagger'
+pos_tagger = StanfordPOSTagger(model, jar, encoding='utf8')
 
 
 def split_sentences(claims_list, n):
@@ -51,6 +58,7 @@ def plot_similarity(labels, features, rotation):
 
 check_gpu()
 
+# module_url = 'https://tfhub.dev/google/universal-sentence-encoder-multilingual-large/1'
 module_url = 'https://tfhub.dev/google/universal-sentence-encoder/2'
 tf_hub_embedder = hub.Module(module_url)
 
@@ -72,49 +80,18 @@ df['day'] = pd.to_datetime(df['date']).dt.date
 logger.info("Data successfully loaded")
 #df = df.head(100) # TODO REMOVE THIS!!!
 
-# Tokenize tweets with the Stanford PTB tokenizer
-'''
-from nltk.tag import StanfordPOSTagger
-from nltk import word_tokenize
-
-# Add the jar and model via their path (instead of setting environment variables):
-jar = 'your_path/stanford-postagger-full-2016-10-31/stanford-postagger.jar'
-model = 'your_path/stanford-postagger-full-2016-10-31/models/english-left3words-distsim.tagger'
-
-pos_tagger = StanfordPOSTagger(model, jar, encoding='utf8')
-
-text = pos_tagger.tag(word_tokenize("What's the airspeed of an unladen swallow ?"))
-print(text)
-'''
-from nltk.tag import StanfordPOSTagger
-from nltk import word_tokenize
-#
-# import os
-# os.environ['JAVAHOME'] = '/usr/bin/java'
-#
-# # Add the jar and model via their path (instead of setting environment variables):
-jar = 'stanford-postagger-2018-10-16/stanford-postagger-3.9.2.jar'
-model = 'stanford-postagger-2018-10-16/models/english-left3words-distsim.tagger'
-pos_tagger = StanfordPOSTagger(model, jar, encoding='utf8')
-
-df['text_clean'] = df['text'].str.lower()
-
 if not os.path.isfile('cache/all_tweets_embedded.pkl'):
     logger.info("Running sentence embedding")
-    #from nltk.parse.corenlp import CoreNLPParser
     os.environ['CLASSPATH'] = 'stanford-postagger-2018-10-16'
-    #st = CoreNLPParser()
-    #st.tokenize(df['text_clean'])
 
-    logger.info("Tokenizing tweets with Stanford tokenizer...")
-    from nltk.tokenize.stanford import StanfordTokenizer
-    df['text_clean'] = [StanfordTokenizer().tokenize(x) for x in df['text_clean']]
-    logger.info("Finish tokenizing tweets")
-    StanfordTokenizer().tokenize(df['text_clean'])
+    logger.info("Tokenizing with NLTK's TweetTokenizer")
+    # TODO figure out how much of this will be poor performance due to the French
+    detokenizer = TreebankWordDetokenizer()
+    tweet_tokenizer = TweetTokenizer(preserve_case=False, strip_handles=False, reduce_len=False)
+    df['text_clean'] = [detokenizer.detokenize(tweet_tokenizer.tokenize(str(tweet))) for tweet in df['text']]
 
-    logger.info("Splitting sentences into batches")
+    # logger.info("Splitting sentences into batches")
     tweets_to_embed = list(df['text_clean'])
-    tweets_to_embed = [st.tokenize((tweet)) for tweet in tweets_to_embed]
     sentences_batched = list(split_sentences(tweets_to_embed, 200000))
     logger.info("Done batching tweets")
 
@@ -141,12 +118,15 @@ else:
 #
 #     # Save dataframe for exploration in a notebook
 #     df.to_csv('tmp/clustering_attempt_{}_{}clusters.csv'.format(clustering_method, n))
+#
 
-n=10
-kmeans = KMeans(n_clusters=n, random_state=0).fit(all_tweets_embedded)
-predictions = kmeans.predict(all_tweets_embedded)
-df['cluster'] = predictions
-df.to_csv('tmp/clustering_attempt_{}_{}clusters.csv'.format(clustering_method, n))
+# TODO kill this -- k means takes forever and likely won't work on 512 dimensions
+# n=10
+# logger.info("Running k-means")
+# kmeans = KMeans(n_clusters=n, random_state=0, verbose=1, n_jobs=-1, algorithm='elkan', n_init=3).fit(all_tweets_embedded)
+# predictions = kmeans.predict(all_tweets_embedded)
+# df['cluster'] = predictions
+# df.to_csv('tmp/clustering_attempt_{}_{}clusters.csv'.format(clustering_method, n))
 
 
 # Look at samples from the cluster
