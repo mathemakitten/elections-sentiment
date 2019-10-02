@@ -36,10 +36,7 @@ header = html.Div(children=[
 ])
 
 # Top left chart: tweets by volume over time
-# TODO CACHE THIS and move it into a function
-tweet_volume_df = pd.DataFrame(data={'num_tweets': df['day'].value_counts().sort_index(),
-                                     'day_of_week': pd.to_datetime(df['day'].value_counts().sort_index().index).dayofweek.map(day_of_week_mapping)},
-                               index=df['day'].value_counts().sort_index().index)
+tweet_volume_df = data_prep_calculate_tweet_volume(df)
 
 # Graph: volume of tweets over time
 volume_graph = html.Div(children=[
@@ -82,15 +79,10 @@ top10_accounts_by_tweets = html.Div(children=[
     className="six columns")
 
 # Graph: Top 10 mentions by Twitter handles
-# TODO cache this and move it into a function
-all_mentions = df['mentions'].str.cat(sep=' ').split(' ')
-mentions_df = pd.DataFrame(Counter(all_mentions).most_common(10), columns=['mentions', 'count'])
-
+mentions_df = data_prep_top10_mentions(df)
 top10_mentions = html.Div(children=[
     dcc.Graph(id='top10_mentions',
-              figure=go.Figure(data=go.Bar(y=mentions_df['mentions'], x=mentions_df['count'],
-                                           orientation='h'
-                                           ),
+              figure=go.Figure(data=go.Bar(y=mentions_df['mentions'], x=mentions_df['count'], orientation='h'),
                                layout=go.Layout(title='Top 10 Accounts @Mentioned',
                                                 hovermode='closest',
                                                 xaxis={'title': 'user', 'tickangle': -60},
@@ -100,13 +92,14 @@ top10_mentions = html.Div(children=[
               ), html.Span(children=[html.P('Who do people talk to/about the most?')], style={'text-align': 'center'})
 ], className="six columns")
 
-# TODO CACHE THE AGG DF HERE and move into function
+
 #  Graph: Top 10 Accounts by Favorites
+top10_accounts_faves_df = data_prep_top10_accounts_fave(df)
 top10_accounts_by_faves = html.Div(children=[
     dcc.Graph(id='top10_accounts_by_faves',
               figure=go.Figure(data=go.Bar(
-                  y=df.groupby(['username']).agg({'favorites': sum}).sort_values('favorites', ascending=False).head(10).index.tolist(),
-                  x=df.groupby(['username']).agg({'favorites': sum}).sort_values('favorites', ascending=False).head(10)['favorites'],
+                  y=top10_accounts_faves_df.index.tolist(),
+                  x=top10_accounts_faves_df['favorites'],
                   orientation='h'),
                   layout=go.Layout(title='Top 10 Accounts by Favourites',
                                    hovermode='closest',
@@ -119,13 +112,13 @@ top10_accounts_by_faves = html.Div(children=[
               style={'text-align': 'center'})
 ], className="six columns")
 
-# TODO CACHE THE AGG DF HERE and move it into a function
 # Graph: Top 10 Accounts by Retweets
+top10_accounts_retweets_df = data_prep_top10_accounts_retweets(df)
 top10_accounts_by_retweets = html.Div(children=[
     dcc.Graph(id='top10_accounts_by_retweets',
               figure=go.Figure(data=go.Bar(
-                  y=df.groupby(['username']).agg({'retweets': sum}).sort_values('retweets', ascending=False).head(10).index.tolist(),
-                  x=df.groupby(['username']).agg({'retweets': sum}).sort_values('retweets', ascending=False).head(10)['retweets'],
+                  y=top10_accounts_retweets_df.index.tolist(),
+                  x=top10_accounts_retweets_df['retweets'],
                   orientation='h'),
                   layout=go.Layout(title='Top 10 Accounts by Retweets',
                                    hovermode='closest',
@@ -138,8 +131,8 @@ top10_accounts_by_retweets = html.Div(children=[
               style={'text-align': 'center'})
 ], className="six columns")
 
-retweet_df = data_prep_retweet_df(df)  # TODO CACHE THIS v
 # Graph: Top 10 Accounts by Retweets
+retweet_df = data_prep_retweet_df(df)
 top10_tweets_by_retweets = html.Div([
     html.H5(children='Top 10 tweets by retweets'),
     html.Div(children=[dash_table.DataTable(id='top10_tweets_by_retweets',
@@ -159,7 +152,7 @@ top10_tweets_by_retweets = html.Div([
              )],
     style={'padding-top': '50px', 'padding-right': '50px', 'padding-bottom': '50px', 'padding-left': '50px'})
 
-favorites_df = data_prep_favorites_df(df)  # TODO: CACHE THIS
+favorites_df = data_prep_favorites_df(df)
 top10_tweets_by_favorites = html.Div([
     html.H5(children='Top 10 tweets by favorites'),
     html.Div(children=[dash_table.DataTable(id='top10_tweets_by_favorites',
@@ -179,7 +172,7 @@ top10_tweets_by_favorites = html.Div([
     style={'padding-top': '10px', 'padding-right': '50px', 'padding-bottom': '50px', 'padding-left': '50px'})
 
 # Top 25 hashtags
-hashtag_counts_df = data_prep_hashtag_counts_df(df)  # TODO: CACHE THIS
+hashtag_counts_df = data_prep_hashtag_counts_df(df)
 top25_hashtags = html.Div(children=[
     html.Span(html.H5(children='Top 25 Popular Hashtags'), style={'text-align': 'center'}),
     dcc.Graph(
@@ -194,14 +187,7 @@ top25_hashtags = html.Div(children=[
 
 
 # Average number of tweets by time of day (EST)
-# TODO CACHE THIS and move it into a function
-df['date'] = pd.to_datetime(df['date'])
-df['hour'] = df['date'].dt.strftime('%H')  #:%M')
-average_number_of_tweets_per_hour = df.groupby(['hour'])['hour'].count()/df['day'].nunique()
-hour_dict = {'00': 'Midnight', '01': '1:00 AM', '02': '2:00 AM', '03': '3:00 AM', '04': '4:00 AM', '05': '5:00 AM', '06': '6:00 AM',
-             '07': '7:00 AM', '08': '8:00 AM', '09': '9:00 AM', '10': '10:00 AM', '11': '11:00 AM', '12': '12:00 PM',
-             '13': '1:00 PM', '14': '2:00 PM', '15': '3:00 PM', '16': '4:00 PM', '17': '5:00 PM', '18': '6:00 PM',
-             '19': '7:00 PM', '20': '8:00 PM', '21': '9:00 PM', '22': '10:00 PM', '23': '11:00 PM'}
+average_number_of_tweets_per_hour = data_prep_tweets_by_time(df)
 
 tweet_volume_hourly = html.Div(children=[
     dcc.Graph(
@@ -216,7 +202,7 @@ tweet_volume_hourly = html.Div(children=[
 ], className="six columns", style={'padding-bottom': '50px'})
 
 # Top external links
-links_df, all_urls = data_prep_links_df(df) #  TODO CACHE THIS AND MOVE IT INTO a function
+links_df, all_urls = data_prep_links_df(df)
 top10_links = html.Div([
     html.H5(children='Top 10 External Links'),
     html.Span(children=[html.P('What are people sharing on Twitter?')]),
@@ -236,7 +222,7 @@ top10_links = html.Div([
 
 
 # Top 10 domains linked
-domains_df = data_prep_domains_df(all_urls) # TODO cache and functionalize
+domains_df = data_prep_domains_df(all_urls)
 
 top10_domains = html.Div(children=[
     html.Span(html.H5(children='Top 10 External Domains'), style={'text-align': 'center'}),
@@ -254,9 +240,7 @@ top10_domains = html.Div(children=[
 header_politician = html.Div(children=[html.H3(children='Breakdown by Political Party Leader')], style={'padding-top': '20px', 'padding-bottom': '20px'})
 
 # POLITICAL PARTY LEADERS
-# TODO cache and functionalize this whole thing
-leader_df = df[df['username'].isin(LEADER_USERNAMES)]
-leader_df['days_until_election'] = [(x - datetime.date(2019, 10, 21)).days for x in pd.to_datetime(leader_df['day']).dt.date]
+leader_df = data_prep_leader_df(df)
 
 leader_id_cards = []
 leader_profile = {}
@@ -285,25 +269,24 @@ leader_tweet_volume = html.Div([
                     )
 ], style={'padding-left': '50px', 'padding-right': '50px', 'padding-top': '50px', 'padding-bottom': '20px'})
 
+
 # Header for hashtags by politicians
 hashtags_politician_header = html.Div(children=[html.H3(children='Top 10 Hashtags by Political Party Leader')], style={'padding-top': '50px', 'padding-bottom': '10px'})
 
+
 # What are the politicians tweeting about? (hashtags)
+leader_hashtag_counts = data_prep_count_hashtags_by_leader(df)
 hashtag_leader_cards = []
-leader_hashtag_counts = {}
 for leader in LEADER_USERNAMES:
-    leader_hashtags = df[df['username'] == leader]['hashtags'].str.cat(sep=' ').split(' ')
-    leader_hashtag_counts_df = pd.DataFrame(Counter(leader_hashtags).most_common(10), columns=['hashtag', 'count'])
-    leader_hashtag_counts[leader] = leader_hashtag_counts_df
     hashtag_leader_cards.append(html.Div([html.P(children=[leader]),
                                           html.Div(children=[dash_table.DataTable(id='top_hashtags_by_leader_{}'.format(leader),
-                                                columns=[{"name": i, "id": i} for i in leader_hashtag_counts_df.columns],
+                                                columns=[{"name": i, "id": i} for i in ['hashtag', 'count']],
                                                 data=leader_hashtag_counts[leader].to_dict('records'),
                                                 style_table={'overflowX': 'scroll'},
                                                 style_cell={'height': 'auto', 'minWidth': '0px', 'maxWidth': '115px', 'whiteSpace': 'normal',
                                                             'font-family': "Arial", 'font-size': 12},
                                                 style_as_list_view=True,
-                                                style_header={'backgroundColor': color_dict[leader],#'rgb(230, 230, 230)',
+                                                style_header={'backgroundColor': color_dict[leader],
                                                               'fontWeight': 'bold', 'font-color': 'white'}
                                                 )], style={'overflowX': 'scroll', 'Height': '400px', 'font-family': 'Open Sans'}
                                                    )
