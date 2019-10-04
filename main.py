@@ -19,6 +19,8 @@ df = load_and_clean_data()
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']  # https://codepen.io/chriddyp/pen/bWLwgP
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
+server = app.server
+
 # Twitter authentication
 auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_key, access_secret)
