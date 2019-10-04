@@ -8,6 +8,7 @@ Flask==1.1.1
 Flask-Compress==1.4.0
 gensim==3.8.1
 GetOldTweets3==0.0.10
+gunicorn
 ipykernel==5.1.2
 ipython==7.8.0
 ipython-genutils==0.2.0
