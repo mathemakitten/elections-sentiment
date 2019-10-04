@@ -19,7 +19,7 @@ one month leading up to the election
 campaigns on the election as of September 24 2019
 * It takes ~7 minutes to scrape a day's worth of tweets (25k tweets),
 7 * 180 minutes = 21 hours (+30 seconds for sleep, lol)
-* As of end of September, ~900k tweets with 15 columns: `'username', 'to', 'text', 'retweets', 'favorites', 'replies', 'id',
+* As of end of September, ~900k (Oct 3: 983588) tweets with 15 columns: `'username', 'to', 'text', 'retweets', 'favorites', 'replies', 'id',
        'permalink', 'author_id', 'date', 'formatted_date', 'mentions',
        'hashtags', 'geo', 'urls'`
        

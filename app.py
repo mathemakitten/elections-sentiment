@@ -30,7 +30,7 @@ api = tweepy.API(auth)
 header = html.Div(children=[
     html.H1(children='The 2019 Canadian Federal Election'),
     html.H3(children='Days Until Election: {}'.format((datetime.date(2019, 10, 21) - datetime.date.today()).days)),
-    html.H5(children='Last snapshot: {}'.format('September 25')),
+    html.H5(children='Last snapshot: {}'.format('September 25')),  # October 1 data
     html.Label(['Analyzing the Twitter conversation around the Canadian election']),
     html.Label(['Dashboard by ', html.A('@mathemakitten', href='https://twitter.com/mathemakitten', target='_blank')]),
 ])
@@ -237,7 +237,7 @@ top10_domains = html.Div(children=[
     html.Span(children=[html.P('Which websites do people link to the most?')], style={'text-align': 'center'})
 ], className="six columns", style={'height': '400px'})
 
-header_politician = html.Div(children=[html.H3(children='Breakdown by Political Party Leader')], style={'padding-top': '20px', 'padding-bottom': '20px'})
+header_politician = html.Div(children=[html.H3(children='Breakdown by Political Party Leader')], style={'padding-left': '50px', 'padding-top': '20px', 'padding-bottom': '20px'})
 
 # POLITICAL PARTY LEADERS
 leader_df = data_prep_leader_df(df)
@@ -270,7 +270,7 @@ leader_tweet_volume = html.Div([
 
 
 # Header for hashtags by politicians
-hashtags_politician_header = html.Div(children=[html.H3(children='Top 10 Hashtags by Political Party Leader')], style={'padding-top': '50px', 'padding-bottom': '10px'})
+hashtags_politician_header = html.Div(children=[html.H3(children='Top 10 Hashtags by Political Party Leader')], style={'padding-left': '50px', 'padding-top': '50px', 'padding-bottom': '10px'})
 
 
 # What are the politicians tweeting about? (hashtags)
@@ -282,14 +282,15 @@ for leader in LEADER_USERNAMES:
                                                 columns=[{"name": i, "id": i} for i in ['hashtag', 'count']],
                                                 data=leader_hashtag_counts[leader].to_dict('records'),
                                                 style_table={'overflowX': 'scroll'},
-                                                style_cell={'height': 'auto', 'minWidth': '0px', 'maxWidth': '115px', 'whiteSpace': 'normal',
-                                                            'font-family': "Arial", 'font-size': 12},
+                                                style_cell={'height': 'auto', 'minWidth': '0px', 'maxWidth': '90px', #'whiteSpace': 'normal',
+                                                            'font-family': "Arial", 'font-size': 11},
+                                                style_cell_conditional=[{'if': {'column_id': 'count'}, 'width': '20%'}],
                                                 style_as_list_view=True,
                                                 style_header={'backgroundColor': color_dict[leader],
                                                               'fontWeight': 'bold', 'font-color': 'white'}
-                                                )], style={'overflowX': 'scroll', 'Height': '400px', 'font-family': 'Open Sans'}
+                                                )], style={'overflowX': 'scroll', 'Height': '400px', 'font-family': 'Open Sans', 'maxWidth':'200px'}
                                                    )
-                                          ], className="two columns",))
+                                          ], style={'padding-left': '25px'}, className="two columns",))
 
 
 # Table: Top 10 tweets by leader by likes
@@ -328,6 +329,46 @@ top10_tweets_by_leader_retweets = html.Div([
 ], style={'padding-left': '50px', 'padding-right': '50px', 'padding-top': '50px', 'padding-bottom': '20px'})
 
 
+# Table: Named entity detection
+entity_df = pickle.load(open('nlp_results/named_entities.pkl', 'rb')).head(10)
+top10_named_entities = html.Div([
+    html.H5(children='Top 10 Most Common Named Entities'),
+    html.P(children='* Entities extracted with natural language methods; performance is variable'),
+    dash_table.DataTable(id='common-entities', columns=[{"name": i, "id": i} for i in ['entity', 'count']],
+                         data=entity_df.to_dict('records'),
+                         style_table={'overflowX': 'scroll'},
+                         style_cell={'height': 'auto', 'maxHeight': '300px', 'minWidth': '100px', 'Width': '500px', 'whiteSpace': 'normal',
+                                     'font-family': "Arial", 'font-size': 11
+                                     },
+                         style_as_list_view=True,
+                         style_header={'backgroundColor': 'rgb(230, 230, 230)', 'fontWeight': 'bold'}
+                         ),
+], style={'padding-left': '50px', 'padding-right': '50px', 'padding-top': '50px', 'padding-bottom': '20px'}, className="six columns")
+
+
+# Table: Named entity detection broken down by politician
+entity_leader_df = pickle.load(open('nlp_results/df_politician.pkl', 'rb')).head(10)
+named_entities_by_leader = html.Div([
+    html.H5(children='Most Common Named Entities Mentioned by Leader'),
+    html.P(children='* Entities extracted with natural language methods; performance is variable'),
+    dcc.Dropdown(id='leader-entities-dd',
+                     options=[{'label': i, 'value': i} for i in LEADER_USERNAMES],
+                     value=1,
+                     ),
+    dash_table.DataTable(id='common-entities-leader', columns=[{"name": i, "id": i} for i in ['entity', 'count']],
+                         #data=entity_df.to_dict('records'),
+                         style_table={'overflowX': 'scroll'},
+                         style_cell={'height': 'auto', 'maxHeight': '300px', 'minWidth': '100px', 'Width': '500px', 'whiteSpace': 'normal',
+                                     'font-family': "Arial", 'font-size': 11
+                                     },
+                         style_as_list_view=True,
+                         style_header={'backgroundColor': 'rgb(230, 230, 230)', 'fontWeight': 'bold'}
+                         ),
+], style={'padding-right': '50px', 'padding-top': '50px', 'padding-bottom': '20px'}, className="six columns")
+
+
+# TODO add named entity total + by politician
+
 # Main container
 app.layout = html.Div([
     header,
@@ -344,7 +385,9 @@ app.layout = html.Div([
     hashtags_politician_header,
     html.Div(children=hashtag_leader_cards, className="row"),
     top10_tweets_by_leader_likes,
-    top10_tweets_by_leader_retweets
+    top10_tweets_by_leader_retweets,
+    html.Div(children=[top10_named_entities, named_entities_by_leader], className="row"),
+
 ], style={'padding-left': '50px', 'padding-right': '50px', 'padding-top': '50px', 'padding-bottom': '50px'})
 
 
@@ -390,6 +433,20 @@ def update_leader_likes(leader):
 def update_leader_retweets(leader):
     filtered_leader_df = leader_df[(leader_df['username'] == leader)].sort_values(by=['retweets'], ascending=False)[['day', 'text', 'retweets']].head(10).sort_values(by=['retweets'], ascending=False)
     return filtered_leader_df.to_dict('records')
+
+
+@app.callback(Output('common-entities-leader', 'data'), [Input('leader-entities-dd', 'value')])
+def update_leader_retweets(leader):
+    filtered_leader_df = entity_leader_df[entity_leader_df['username'] == leader] #.sort_values(by=['retweets'], ascending=False)[['day', 'text', 'retweets']].head(10).sort_values(by=['retweets'], ascending=False)
+    # parse out entities
+    # print(Counter(filtered_leader_df['named_entity']))
+    # print(Counter(filtered_leader_df['named_entity'].sum()))
+    # print(Counter(filtered_leader_df['named_entity'].sum()).most_common(10))
+    # leader_entities_df = pd.DataFrame(Counter(filtered_leader_df['named_entity'].sum()).most_common(10), columns=['entity', 'count'])
+    entity_count = filtered_leader_df['named_entity'].tolist()
+    entity_count = [i for j in entity_count for i in j]
+    leader_entities_df = pd.DataFrame(Counter(entity_count).most_common(10), columns=['entity', 'count'])
+    return leader_entities_df.to_dict('records')
 
 
 if __name__ == '__main__':
