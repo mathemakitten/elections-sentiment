@@ -124,12 +124,12 @@ else:
 
 
 # TODO kill this -- k means takes forever and likely won't work on 512 dimensions
-# n=10
-# logger.info("Running k-means")
-# kmeans = KMeans(n_clusters=n, random_state=0, verbose=1, n_jobs=-1, algorithm='elkan', n_init=3).fit(all_tweets_embedded)
-# predictions = kmeans.predict(all_tweets_embedded)
-# df['cluster'] = predictions
-# df.to_csv('tmp/clustering_attempt_{}_{}clusters.csv'.format(clustering_method, n))
+n=50
+logger.info("Running k-means")
+kmeans = KMeans(n_clusters=n, random_state=0, verbose=1, n_jobs=-1, algorithm='elkan', n_init=3).fit(all_tweets_embedded)
+predictions = kmeans.predict(all_tweets_embedded)
+df['cluster'] = predictions
+df.to_csv('tmp/clustering_attempt_{}_{}clusters.csv'.format(clustering_method, n))
 
 # UMAP clustering - this is mostly for embedding down to n-dim space though
 # logger.info("Attempting to cluster with UMAP")
@@ -143,23 +143,23 @@ tiny_tweets = all_tweets_embedded[0:1000]
 clustering = DBSCAN(eps=3, min_samples=100).fit(all_tweets_embedded[0:1000])
 test = clustering.fit_predict(all_tweets_embedded[0:1000])
 '''
-from sklearn.manifold import TSNE
-from matplotlib import pyplot as plt
-tsne = TSNE(n_components=2, verbose=0, perplexity=40, n_iter=300)
-tsne_pca_results = tsne.fit_transform(all_tweets_embedded)
-df['tsne-pca50-one'] = tsne_pca_results[:,0]
-df['tsne-pca50-two'] = tsne_pca_results[:,1]
-plt.figure(figsize=(16,4))
-plot = sns.scatterplot(
-    x="tsne-2d-one", y="tsne-2d-two",
-    #hue="y",
-    palette=sns.color_palette("hls", 10),
-    data=df,
-    legend="full",
-    alpha=0.3,
-)
-fig = plot.get_figure()
-fig.savefig('test.png')
+# from sklearn.manifold import TSNE
+# from matplotlib import pyplot as plt
+# tsne = TSNE(n_components=2, verbose=0, perplexity=40, n_iter=300)
+# tsne_pca_results = tsne.fit_transform(all_tweets_embedded)
+# df['tsne-pca50-one'] = tsne_pca_results[:,0]
+# df['tsne-pca50-two'] = tsne_pca_results[:,1]
+# plt.figure(figsize=(16,4))
+# plot = sns.scatterplot(
+#     x="tsne-2d-one", y="tsne-2d-two",
+#     #hue="y",
+#     palette=sns.color_palette("hls", 10),
+#     data=df,
+#     legend="full",
+#     alpha=0.3,
+# )
+# fig = plot.get_figure()
+# fig.savefig('test.png')
 
 # Look at samples from the cluster
 # random.sample(list(df[df['cluster'] == 0]['text']), 10)
