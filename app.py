@@ -12,6 +12,8 @@ import tweepy
 from secrets import *
 from data_prep import *
 
+HEADER_COLOR = '#83c3cd'
+
 df = load_and_clean_data()
 tweet_volume_df = data_prep_calculate_tweet_volume(df)
 top10_accounts_by_tweets_df = data_prep_accounts_by_tweet_volume(df)
@@ -39,6 +41,7 @@ del(df)
 # Dash setup
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']  # https://codepen.io/chriddyp/pen/bWLwgP
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+app.title = 'The 2019 Canadian Federal Election on Twitter'
 server = app.server
 
 # Twitter authentication
@@ -59,8 +62,9 @@ header = html.Div(children=[
 volume_graph = html.Div(children=[
     dcc.Graph(id='example-graph',
               figure={'data': [{'x': tweet_volume_df.index, 'y': tweet_volume_df['num_tweets'],  'type': 'line',
-                                'hover_name': tweet_volume_df.index, 'hovertext': tweet_volume_df['day_of_week']},],
-                      'layout': {'title': 'Tweets about Canadian Politics from April - September 2019'}
+                                'hover_name': tweet_volume_df.index, 'hovertext': tweet_volume_df['day_of_week'],}
+                               ],
+                      'layout': {'title': 'Tweets about Canadian Politics from July - October 2019'}
                       })], className="six columns")
 
 # Table: General overview stats
@@ -87,7 +91,9 @@ top10_accounts_by_tweets = html.Div(children=[
     dcc.Graph(id='top10_accounts_by_tweets',
               figure=go.Figure(data=go.Bar(y=top10_accounts_by_tweets_df.index.tolist(),
                                            x=top10_accounts_by_tweets_df['username'], # this is actually count
-                                           orientation='h'),
+                                           orientation='h',
+                                           marker_color='#07889B'  # https://www.color-hex.com/color/07889b
+                                           ),
                                layout=go.Layout(title='Top 10 Accounts by Number of Tweets',
                                                 hovermode='closest',
                                                 xaxis={'title': 'number of tweets'}, yaxis={'autorange': 'reversed'},
@@ -99,7 +105,9 @@ top10_accounts_by_tweets = html.Div(children=[
 # Graph: Top 10 mentions by Twitter handles
 top10_mentions = html.Div(children=[
     dcc.Graph(id='top10_mentions',
-              figure=go.Figure(data=go.Bar(y=mentions_df['mentions'], x=mentions_df['count'], orientation='h'),
+              figure=go.Figure(data=go.Bar(y=mentions_df['mentions'], x=mentions_df['count'], orientation='h',
+                                           marker_color='#51abb9'
+                                           ),
                                layout=go.Layout(title='Top 10 Accounts @Mentioned',
                                                 hovermode='closest',
                                                 xaxis={'title': 'user', 'tickangle': -60},
@@ -116,6 +124,7 @@ top10_accounts_by_faves = html.Div(children=[
               figure=go.Figure(data=go.Bar(
                   y=top10_accounts_faves_df.index.tolist(),
                   x=top10_accounts_faves_df['favorites'],
+                  marker_color=HEADER_COLOR,
                   orientation='h'),
                   layout=go.Layout(title='Top 10 Accounts by Favourites',
                                    hovermode='closest',
@@ -134,6 +143,7 @@ top10_accounts_by_retweets = html.Div(children=[
               figure=go.Figure(data=go.Bar(
                   y=top10_accounts_retweets_df.index.tolist(),
                   x=top10_accounts_retweets_df['retweets'],
+                  marker_color='#b4dbe1',
                   orientation='h'),
                   layout=go.Layout(title='Top 10 Accounts by Retweets',
                                    hovermode='closest',
@@ -157,10 +167,10 @@ top10_tweets_by_retweets = html.Div([
                                                         'minWidth': '0px', 'Width': '500px',
                                                         'whiteSpace': 'normal',
                                                         'font-family': "Arial",
-                                                        'font-size': 12
+                                                        'font-size': 14
                                                         },
                                             style_as_list_view=True,
-                                            style_header={'backgroundColor': 'rgb(230, 230, 230)', 'fontWeight': 'bold'}
+                                            style_header={'backgroundColor': HEADER_COLOR, 'fontWeight': 'bold'}
                                             )],
              style={'overflowX': 'scroll', 'Width': '2000px', 'Height': '400px', 'font-family': 'Open Sans'}
              )],
@@ -175,10 +185,10 @@ top10_tweets_by_favorites = html.Div([
                                             style_cell={'height': 'auto',
                                                         'minWidth': '0px', 'Width': '500px',
                                                         'whiteSpace': 'normal',
-                                                        'font-family': "Arial", 'font-size': 12
+                                                        'font-family': "Arial", 'font-size': 14
                                                         },
                                             style_as_list_view=True,
-                                            style_header={'backgroundColor': 'rgb(230, 230, 230)',
+                                            style_header={'backgroundColor': HEADER_COLOR,
                                                           'fontWeight': 'bold'})],
              style={'overflowX': 'scroll', 'Width': '2000px', 'Height': '400px', 'font-family': 'Open Sans'}
              )],
@@ -190,7 +200,9 @@ top25_hashtags = html.Div(children=[
     dcc.Graph(
         id='top25_hashtags',
         figure=go.Figure(data=go.Bar(y=hashtag_counts_df['count'],
-                                     x=hashtag_counts_df['hashtag']),
+                                     x=hashtag_counts_df['hashtag'],
+                                     marker_color='#07889b'
+                                     ),
                          layout=go.Layout(hovermode='closest',
                                           xaxis={'tickangle': -60}, yaxis={'title': 'number of times tweeted'},
                                           font={'family': 'Arial'}, margin=dict(l=50, r=50, t=20, b=20)
@@ -221,9 +233,9 @@ top10_links = html.Div([
                                             data=links_df.to_dict('records'),
                                             style_table={'overflowX': 'scroll'},
                                             style_cell={'height': 'auto', 'minWidth': '0px', 'Width': '500px', 'whiteSpace': 'normal',
-                                                        'font-family': "Arial", 'font-size': 12, 'text-align': 'left'},
+                                                        'font-family': "Arial", 'font-size': 14, 'text-align': 'left'},
                                             style_as_list_view=True,
-                                            style_header={'backgroundColor': 'rgb(230, 230, 230)', 'fontWeight': 'bold'}
+                                            style_header={'backgroundColor': HEADER_COLOR, 'fontWeight': 'bold'}
                                             )],
              style={'overflowX': 'scroll', 'Width': '2000px', 'Height': '400px', 'font-family': 'Open Sans'}
              ),
@@ -236,10 +248,12 @@ top10_links = html.Div([
 top10_domains = html.Div(children=[
     html.Span(html.H5(children='Top 10 External Domains'), style={'text-align': 'center'}),
     dcc.Graph(id='top10_domains',
-              figure=go.Figure(data=go.Bar(y=domains_df['domain'], x=domains_df['count'], orientation='h'),
+              figure=go.Figure(data=go.Bar(y=domains_df['domain'], x=domains_df['count'], orientation='h',
+                                           marker_color='#07889B'
+                                           ),
                                layout=go.Layout(hovermode='closest',
                                                 xaxis={'title': 'times linked'}, yaxis={'autorange': 'reversed'},
-                                                font={'family': 'Arial', 'size': 12},
+                                                font={'family': 'Arial', 'size': 14},
                                                 margin=dict(l=25, r=50, t=20, b=0), height=350
                                                 )),
               ),
@@ -271,7 +285,7 @@ leader_tweet_volume = html.Div([
     dcc.RangeSlider(id='day-slider',
                     min=leader_df['days_until_election'].min(), max=leader_df['days_until_election'].max(),
                     value=[leader_df['days_until_election'].min(), leader_df['days_until_election'].max()],
-                    marks={str(day): {'label': str(-day), 'style': {"transform": "rotate(-90deg)", 'fontSize': 8}} for day in sorted([x for x in leader_df['days_until_election'].unique() if x % 5 == 0])},
+                    marks={str(day): {'label': str(-day), 'style': {"transform": "rotate(-90deg)", 'fontSize': 10}} for day in sorted([x for x in leader_df['days_until_election'].unique() if x % 5 == 0])},
                     step=None
                     )
 ], style={'padding-left': '50px', 'padding-right': '50px', 'padding-top': '50px', 'padding-bottom': '20px'})
@@ -290,7 +304,7 @@ for leader in LEADER_USERNAMES:
                                                 data=leader_hashtag_counts[leader].to_dict('records'),
                                                 style_table={'overflowX': 'scroll'},
                                                 style_cell={'height': 'auto', 'minWidth': '0px', 'maxWidth': '90px', #'whiteSpace': 'normal',
-                                                            'font-family': "Arial", 'font-size': 11},
+                                                            'font-family': "Arial", 'font-size': 14},
                                                 style_cell_conditional=[{'if': {'column_id': 'count'}, 'width': '20%'}],
                                                 style_as_list_view=True,
                                                 style_header={'backgroundColor': color_dict[leader],
@@ -311,10 +325,10 @@ top10_tweets_by_leader_likes = html.Div([
                          style_table={'overflowX': 'scroll'},
                          style_cell={'height': 'auto',
                                      'minWidth': '100px', 'Width': '500px', 'whiteSpace': 'normal',
-                                     'font-family': "Arial", 'font-size': 12
+                                     'font-family': "Arial", 'font-size': 14
                                      },
                          style_as_list_view=True,
-                         style_header={'backgroundColor': 'rgb(230, 230, 230)', 'fontWeight': 'bold'}
+                         style_header={'backgroundColor': HEADER_COLOR, 'fontWeight': 'bold'}
                          ),
 ], style={'padding-left': '50px', 'padding-right': '50px', 'padding-top': '50px', 'padding-bottom': '20px'})
 
@@ -328,27 +342,27 @@ top10_tweets_by_leader_retweets = html.Div([
     dash_table.DataTable(id='leader-retweets-graph', columns=[{"name": i, "id": i} for i in ['day', 'text', 'retweets']],
                          style_table={'overflowX': 'scroll'},
                          style_cell={'height': 'auto', 'minWidth': '100px', 'Width': '500px', 'whiteSpace': 'normal',
-                                     'font-family': "Arial", 'font-size': 12
+                                     'font-family': "Arial", 'font-size': 14
                                      },
                          style_as_list_view=True,
-                         style_header={'backgroundColor': 'rgb(230, 230, 230)', 'fontWeight': 'bold'}
+                         style_header={'backgroundColor': HEADER_COLOR, 'fontWeight': 'bold'}
                          ),
 ], style={'padding-left': '50px', 'padding-right': '50px', 'padding-top': '50px', 'padding-bottom': '20px'})
 
 
 # Table: Named entity detection
-entity_df = pickle.load(open('nlp_results/named_entities.pkl', 'rb')).head(10)
+entity_df = pickle.load(open('nlp_results/named_entities.pkl', 'rb')).head(20)
 top10_named_entities = html.Div([
-    html.H5(children='Top 10 Most Common Named Entities'),
+    html.H5(children='Top 20 Most Common Named Entities'),
     html.P(children='* Entities extracted with natural language methods; performance is variable'),
     dash_table.DataTable(id='common-entities', columns=[{"name": i, "id": i} for i in ['entity', 'count']],
                          data=entity_df.to_dict('records'),
                          style_table={'overflowX': 'scroll'},
                          style_cell={'height': 'auto', 'maxHeight': '300px', 'minWidth': '100px', 'Width': '500px', 'whiteSpace': 'normal',
-                                     'font-family': "Arial", 'font-size': 11
+                                     'font-family': "Arial", 'font-size': 14
                                      },
                          style_as_list_view=True,
-                         style_header={'backgroundColor': 'rgb(230, 230, 230)', 'fontWeight': 'bold'}
+                         style_header={'backgroundColor': HEADER_COLOR, 'fontWeight': 'bold'}
                          ),
 ], style={'padding-left': '50px', 'padding-right': '50px', 'padding-top': '50px', 'padding-bottom': '20px'}, className="six columns")
 
@@ -366,10 +380,10 @@ named_entities_by_leader = html.Div([
                          #data=entity_df.to_dict('records'),
                          style_table={'overflowX': 'scroll'},
                          style_cell={'height': 'auto', 'maxHeight': '300px', 'minWidth': '100px', 'Width': '500px', 'whiteSpace': 'normal',
-                                     'font-family': "Arial", 'font-size': 11
+                                     'font-family': "Arial", 'font-size': 14
                                      },
                          style_as_list_view=True,
-                         style_header={'backgroundColor': 'rgb(230, 230, 230)', 'fontWeight': 'bold'}
+                         style_header={'backgroundColor': HEADER_COLOR, 'fontWeight': 'bold'}
                          ),
 ], style={'padding-right': '50px', 'padding-top': '50px', 'padding-bottom': '20px'}, className="six columns")
 
@@ -378,7 +392,7 @@ named_entities_by_leader = html.Div([
 footer = html.Div(children=[
     html.H3(children='Coming soon'),
     html.P(['* Tweet similarity analysis & topic modeling']),
-    html.P(['* Real reverse-proxying for a domain, perhaps 🙃']),
+    html.P(['* Reverse-proxying for a domain, perhaps 🙃']),
 ], style={'padding-left': '50px'})
 
 
