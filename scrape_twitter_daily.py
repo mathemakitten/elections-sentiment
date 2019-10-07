@@ -9,8 +9,8 @@ from utils import get_logger
 logger = get_logger('Scrape')
 
 # TODAY = datetime.datetime.today() # USE THIS IF SCRAPING FROM TODAY OTHERWISE USE LINE BELOW
-TODAY = datetime.datetime.strptime('2019-10-01', '%Y-%m-%d')  # prev Sept 24
-MIN_DATE = datetime.datetime.strptime('2019-03-29', '%Y-%m-%d')
+TODAY = datetime.datetime.strptime('2019-09-16', '%Y-%m-%d')  # prev Sept 24
+MIN_DATE = datetime.datetime.strptime('2019-07-01', '%Y-%m-%d')
 #date_list = [TODAY - datetime.timedelta(days=x) for x in range(NUM_DAYS)]
 date_list = [TODAY - datetime.timedelta(days=x) for x in range((TODAY-MIN_DATE).days + 1)]
 

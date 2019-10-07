@@ -24,7 +24,8 @@ def load_and_clean_data():
                 'text', 'retweets', 'favorites', #'replies', 'id',
        #'permalink', 'author_id', 'formatted_date',
                 'date', 'mentions',
-                'hashtags', 'geo', 'urls']
+                'hashtags',  #'geo',
+                'urls']
 
     if not os.path.isfile(THIS_FILE):
         files = glob.glob('tweets/cdnpoli_*.csv') #[0:30] #TODO get rid of this sample
@@ -60,6 +61,11 @@ def data_prep_calculate_tweet_volume(df):
     return tweet_volume_df
 
 
+def data_prep_accounts_by_tweet_volume(df):
+    volume_df = df['username'].value_counts().head(10).to_frame()
+    return volume_df
+
+
 def data_prep_retweet_df(df):
 
     THIS_FILE = 'cache/retweet_df.pkl'
@@ -74,9 +80,8 @@ def data_prep_retweet_df(df):
 
 
 def data_prep_favorites_df(df):
-
-    # Note: decided not to cache this because I suspect it's faster to run this in-memory than load from disk?
-    return df.sort_values(by=['favorites'], ascending=False)[['username', 'day', 'text', 'favorites']].head(10)
+    faves_df = df.sort_values(by=['favorites'], ascending=False)[['username', 'day', 'text', 'favorites']].head(10)
+    return faves_df
 
 
 def data_prep_top10_mentions(df):

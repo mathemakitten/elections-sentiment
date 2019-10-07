@@ -12,8 +12,29 @@ import tweepy
 from secrets import *
 from data_prep import *
 
-# Data
 df = load_and_clean_data()
+tweet_volume_df = data_prep_calculate_tweet_volume(df)
+top10_accounts_by_tweets_df = data_prep_accounts_by_tweet_volume(df)
+mentions_df = data_prep_top10_mentions(df)
+top10_accounts_faves_df = data_prep_top10_accounts_fave(df)
+top10_accounts_retweets_df = data_prep_top10_accounts_retweets(df)
+retweet_df = data_prep_retweet_df(df)
+favorites_df = data_prep_favorites_df(df)
+hashtag_counts_df = data_prep_hashtag_counts_df(df)
+average_number_of_tweets_per_hour = data_prep_tweets_by_time(df)
+links_df, all_urls = data_prep_links_df(df)
+domains_df = data_prep_domains_df(all_urls)
+leader_df = data_prep_leader_df(df)
+leader_hashtag_counts = data_prep_count_hashtags_by_leader(df)
+
+# Constants from df
+MIN_DATE = df['day'].min()
+MAX_DATE = df['day'].max()
+TOTAL_NUM_TWEETS = df.shape[0]
+NUM_TWEETERS = df['username'].nunique()
+NUM_HASHTAGS = len(set(df['hashtags'].str.cat(sep=' ').split(' ')))
+
+del(df)
 
 # Dash setup
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']  # https://codepen.io/chriddyp/pen/bWLwgP
@@ -25,24 +46,19 @@ auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_key, access_secret)
 api = tweepy.API(auth)
 
-# TODO try to load from most up-to-date cache to avoid recalculation
-
 # Top header
 header = html.Div(children=[
     html.H1(children='The 2019 Canadian Federal Election'),
     html.H3(children='Days Until Election: {}'.format((datetime.date(2019, 10, 21) - datetime.date.today()).days)),
-    html.H5(children='Last snapshot: {}'.format('September 25')),  # October 1 data
+    html.H5(children='Last snapshot: {}'.format('October 1')),  # October 1 data
     html.Label(['Analyzing the Twitter conversation around the Canadian election']),
     html.Label(['Dashboard by ', html.A('@mathemakitten', href='https://twitter.com/mathemakitten', target='_blank')]),
 ])
 
-# Top left chart: tweets by volume over time
-tweet_volume_df = data_prep_calculate_tweet_volume(df)
-
 # Graph: volume of tweets over time
 volume_graph = html.Div(children=[
     dcc.Graph(id='example-graph',
-              figure={'data': [{'x': tweet_volume_df.index, 'y': tweet_volume_df['num_tweets'],'type': 'line',
+              figure={'data': [{'x': tweet_volume_df.index, 'y': tweet_volume_df['num_tweets'],  'type': 'line',
                                 'hover_name': tweet_volume_df.index, 'hovertext': tweet_volume_df['day_of_week']},],
                       'layout': {'title': 'Tweets about Canadian Politics from April - September 2019'}
                       })], className="six columns")
@@ -50,7 +66,7 @@ volume_graph = html.Div(children=[
 # Table: General overview stats
 overview_stats = html.Div(children=[
     html.H1(children='Overview'),
-    html.P(html.Span(children=[html.B('Date range: '), '{} to {}'.format(df['day'].min(), df['day'].max())])),
+    html.P(html.Span(children=[html.B('Date range: '), '{} to {}'.format(MIN_DATE, MAX_DATE)])),
     html.P(html.Span(children=[html.B('Criteria: '), 'tweets in any language containing the official hashtags ',
                                '#cdnpoli, #elxn43, #polcan, #ItsOurVote, #CestNotreVote,', ' or tweets from official party leaders ',
                                html.A('@JustinTrudeau', href='http://www.twitter.com/JustinTrudeau', target='_blank'), ', ',
@@ -60,16 +76,17 @@ overview_stats = html.Div(children=[
                                # html.A('@MaximeBernier', href='http://www.twitter.com/AndrewScheer', target='_blank'), ', ',
                                html.A('@yfblanchet', href='http://www.twitter.com/yfblanchet', target='_blank'),
                                ])),
-    html.P(html.Span(children=[html.B('Total number of tweets: '), df.shape[0]])),
-    html.P(html.Span(children=[html.B('Number of distinct tweeters: '), df['username'].nunique()])),
-    html.Span(children=[html.B('Number of distinct hashtags: '), len(set(df['hashtags'].str.cat(sep=' ').split(' ')))]),
+    html.P(html.Span(children=[html.B('Total number of tweets: '), TOTAL_NUM_TWEETS])),
+    html.P(html.Span(children=[html.B('Number of distinct tweeters: '), NUM_TWEETERS])),
+    html.Span(children=[html.B('Number of distinct hashtags: '), NUM_HASHTAGS]),
 ], className="six columns")
+
 
 # Graph: Top 10 Accounts by Tweet Volume
 top10_accounts_by_tweets = html.Div(children=[
     dcc.Graph(id='top10_accounts_by_tweets',
-              figure=go.Figure(data=go.Bar(y=df['username'].value_counts().head(10).index.tolist(),
-                                           x=df['username'].value_counts().head(10),
+              figure=go.Figure(data=go.Bar(y=top10_accounts_by_tweets_df.index.tolist(),
+                                           x=top10_accounts_by_tweets_df['username'], # this is actually count
                                            orientation='h'),
                                layout=go.Layout(title='Top 10 Accounts by Number of Tweets',
                                                 hovermode='closest',
@@ -80,7 +97,6 @@ top10_accounts_by_tweets = html.Div(children=[
     className="six columns")
 
 # Graph: Top 10 mentions by Twitter handles
-mentions_df = data_prep_top10_mentions(df)
 top10_mentions = html.Div(children=[
     dcc.Graph(id='top10_mentions',
               figure=go.Figure(data=go.Bar(y=mentions_df['mentions'], x=mentions_df['count'], orientation='h'),
@@ -95,7 +111,6 @@ top10_mentions = html.Div(children=[
 
 
 #  Graph: Top 10 Accounts by Favorites
-top10_accounts_faves_df = data_prep_top10_accounts_fave(df)
 top10_accounts_by_faves = html.Div(children=[
     dcc.Graph(id='top10_accounts_by_faves',
               figure=go.Figure(data=go.Bar(
@@ -114,7 +129,6 @@ top10_accounts_by_faves = html.Div(children=[
 ], className="six columns")
 
 # Graph: Top 10 Accounts by Retweets
-top10_accounts_retweets_df = data_prep_top10_accounts_retweets(df)
 top10_accounts_by_retweets = html.Div(children=[
     dcc.Graph(id='top10_accounts_by_retweets',
               figure=go.Figure(data=go.Bar(
@@ -133,7 +147,6 @@ top10_accounts_by_retweets = html.Div(children=[
 ], className="six columns")
 
 # Graph: Top 10 Accounts by Retweets
-retweet_df = data_prep_retweet_df(df)
 top10_tweets_by_retweets = html.Div([
     html.H5(children='Top 10 tweets by retweets'),
     html.Div(children=[dash_table.DataTable(id='top10_tweets_by_retweets',
@@ -153,7 +166,6 @@ top10_tweets_by_retweets = html.Div([
              )],
     style={'padding-top': '50px', 'padding-right': '50px', 'padding-bottom': '50px', 'padding-left': '50px'})
 
-favorites_df = data_prep_favorites_df(df)
 top10_tweets_by_favorites = html.Div([
     html.H5(children='Top 10 tweets by favorites'),
     html.Div(children=[dash_table.DataTable(id='top10_tweets_by_favorites',
@@ -173,7 +185,6 @@ top10_tweets_by_favorites = html.Div([
     style={'padding-top': '10px', 'padding-right': '50px', 'padding-bottom': '50px', 'padding-left': '50px'})
 
 # Top 25 hashtags
-hashtag_counts_df = data_prep_hashtag_counts_df(df)
 top25_hashtags = html.Div(children=[
     html.Span(html.H5(children='Top 25 Popular Hashtags'), style={'text-align': 'center'}),
     dcc.Graph(
@@ -188,7 +199,6 @@ top25_hashtags = html.Div(children=[
 
 
 # Average number of tweets by time of day (EST)
-average_number_of_tweets_per_hour = data_prep_tweets_by_time(df)
 
 tweet_volume_hourly = html.Div(children=[
     dcc.Graph(
@@ -203,7 +213,6 @@ tweet_volume_hourly = html.Div(children=[
 ], className="six columns", style={'padding-bottom': '50px'})
 
 # Top external links
-links_df, all_urls = data_prep_links_df(df)
 top10_links = html.Div([
     html.H5(children='Top 10 External Links'),
     html.Span(children=[html.P('What are people sharing on Twitter?')]),
@@ -223,7 +232,6 @@ top10_links = html.Div([
 
 
 # Top 10 domains linked
-domains_df = data_prep_domains_df(all_urls)
 
 top10_domains = html.Div(children=[
     html.Span(html.H5(children='Top 10 External Domains'), style={'text-align': 'center'}),
@@ -241,7 +249,6 @@ top10_domains = html.Div(children=[
 header_politician = html.Div(children=[html.H3(children='Breakdown by Political Party Leader')], style={'padding-left': '50px', 'padding-top': '20px', 'padding-bottom': '20px'})
 
 # POLITICAL PARTY LEADERS
-leader_df = data_prep_leader_df(df)
 
 leader_id_cards = []
 leader_profile = {}
@@ -275,7 +282,6 @@ hashtags_politician_header = html.Div(children=[html.H3(children='Top 10 Hashtag
 
 
 # What are the politicians tweeting about? (hashtags)
-leader_hashtag_counts = data_prep_count_hashtags_by_leader(df)
 hashtag_leader_cards = []
 for leader in LEADER_USERNAMES:
     hashtag_leader_cards.append(html.Div([html.P(children=[leader]),
@@ -368,7 +374,13 @@ named_entities_by_leader = html.Div([
 ], style={'padding-right': '50px', 'padding-top': '50px', 'padding-bottom': '20px'}, className="six columns")
 
 
-# TODO add named entity total + by politician
+# Top header
+footer = html.Div(children=[
+    html.H3(children='Coming soon'),
+    html.P(['* Tweet similarity analysis & topic modeling']),
+    html.P(['* Real reverse-proxying for a domain, perhaps 🙃']),
+], style={'padding-left': '50px'})
+
 
 # Main container
 app.layout = html.Div([
@@ -388,6 +400,7 @@ app.layout = html.Div([
     top10_tweets_by_leader_likes,
     top10_tweets_by_leader_retweets,
     html.Div(children=[top10_named_entities, named_entities_by_leader], className="row"),
+    footer
 
 ], style={'padding-left': '50px', 'padding-right': '50px', 'padding-top': '50px', 'padding-bottom': '50px'})
 
@@ -440,10 +453,6 @@ def update_leader_retweets(leader):
 def update_leader_retweets(leader):
     filtered_leader_df = entity_leader_df[entity_leader_df['username'] == leader] #.sort_values(by=['retweets'], ascending=False)[['day', 'text', 'retweets']].head(10).sort_values(by=['retweets'], ascending=False)
     # parse out entities
-    # print(Counter(filtered_leader_df['named_entity']))
-    # print(Counter(filtered_leader_df['named_entity'].sum()))
-    # print(Counter(filtered_leader_df['named_entity'].sum()).most_common(10))
-    # leader_entities_df = pd.DataFrame(Counter(filtered_leader_df['named_entity'].sum()).most_common(10), columns=['entity', 'count'])
     entity_count = filtered_leader_df['named_entity'].tolist()
     entity_count = [i for j in entity_count for i in j]
     leader_entities_df = pd.DataFrame(Counter(entity_count).most_common(10), columns=['entity', 'count'])
@@ -451,21 +460,7 @@ def update_leader_retweets(leader):
 
 
 if __name__ == '__main__':
-    app.run_server()
+    app.run_server(host='0.0.0.0', port=8050)
+    #app.run_server()
     #app.run_server(debug=True, dev_tools_hot_reload=False)
 
-# TODO PROBLEM SOLVE
-'''
-Option 1 
-- schedule a nightly rescrape of everything
-- this means the dashboard is always 1 day behind
-- (assuming that the scrape doesn't fail) 
-- is it possible to catch HTTPS errors and restart recursively? ugh
-
-Option 2 
-- Just put a big "true as of THIS DATE" disclaimer and forget about it
-
-CACHE THE THINGS!!!
-'''
-
-# TODO deploy to Google App Engine
