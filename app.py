@@ -451,8 +451,8 @@ def update_leader_retweets(leader):
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True, dev_tools_hot_reload=False)
-
+    app.run_server()
+    #app.run_server(debug=True, dev_tools_hot_reload=False)
 
 # TODO PROBLEM SOLVE
 '''

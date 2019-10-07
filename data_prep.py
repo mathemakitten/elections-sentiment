@@ -20,12 +20,18 @@ def load_and_clean_data():
 
     THIS_FILE = 'cache/df.pkl'
 
+    USE_COLS = ['username', #'to',
+                'text', 'retweets', 'favorites', #'replies', 'id',
+       #'permalink', 'author_id', 'formatted_date',
+                'date', 'mentions',
+                'hashtags', 'geo', 'urls']
+
     if not os.path.isfile(THIS_FILE):
         files = glob.glob('tweets/cdnpoli_*.csv') #[0:30] #TODO get rid of this sample
-        df = pd.read_csv(files[0])
+        df = pd.read_csv(files[0], usecols=USE_COLS)
 
         for file in files[1:]:
-            df_tmp = pd.read_csv(file)
+            df_tmp = pd.read_csv(file, usecols=USE_COLS)
             df = pd.concat([df, df_tmp])
 
         df['day'] = pd.to_datetime(df['date']).dt.date
