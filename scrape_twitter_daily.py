@@ -21,7 +21,7 @@ for date in date_list:
     logger.info("Scraping tweets for {}".format(date))
     #QUERY = "#cdnpoli OR #elxn43 OR #polcan OR #ItsOurVote OR #CestNotreVote" # --since {} --until {}".format(date, date)
     #QUERY = 'from:justintrudeau OR from:AndrewScheer OR from:ElizabethMay OR from:theJagmeetSingh OR from:MaximeBernier OR from:yfblanchet'
-    QUERY = '#cdnpoli OR #elxn43 OR #polcan OR #ItsOurVote OR #CestNotreVote OR from:justintrudeau OR from:AndrewScheer OR from:ElizabethMay OR from:theJagmeetSingh OR from:MaximeBernier OR from:yfblanchet'
+    QUERY = '#cdnpoli OR #elxn43 OR #polcan OR #ItsOurVote OR #CestNotreVote OR #CanadaDebates2019 OR from:justintrudeau OR from:AndrewScheer OR from:ElizabethMay OR from:theJagmeetSingh OR from:MaximeBernier OR from:yfblanchet'
 
     tweet_criteria = got.manager.TweetCriteria().setQuerySearch(QUERY).setSince(DATE).setUntil(NEXT_DAY)
     tweets = _get_tweet_object(tweet_criteria)

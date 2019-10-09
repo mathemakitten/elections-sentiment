@@ -12,7 +12,7 @@ import tweepy
 from secrets import *
 from data_prep import *
 
-HEADER_COLOR = '#83c3cd'
+HEADER_COLOR = '#83c3cd'  # color guide: https://www.color-hex.com/color/07889b
 
 df = load_and_clean_data()
 tweet_volume_df = data_prep_calculate_tweet_volume(df)
@@ -92,7 +92,7 @@ top10_accounts_by_tweets = html.Div(children=[
               figure=go.Figure(data=go.Bar(y=top10_accounts_by_tweets_df.index.tolist(),
                                            x=top10_accounts_by_tweets_df['username'], # this is actually count
                                            orientation='h',
-                                           marker_color='#07889B'  # https://www.color-hex.com/color/07889b
+                                           marker_color='#07889B'
                                            ),
                                layout=go.Layout(title='Top 10 Accounts by Number of Tweets',
                                                 hovermode='closest',
